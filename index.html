@@ -132,7 +132,6 @@
       document.getElementById("status").innerText = "❌ Location error: " + err.message;
     }
 
-    // Fetch last known location
     fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
       .then(res => res.json())
       .then(data => {
@@ -147,13 +146,4 @@
             🏁 <strong>Final Destination:</strong> ${finalDestination}
           `;
         } else {
-          document.getElementById("location-info").innerText = "📍 No check-ins yet.";
-        }
-      })
-      .catch(err => {
-        console.error("❌ Error loading last location:", err);
-        document.getElementById("location-info").innerText = "❌ Error loading last location.";
-      });
-  </script>
-</body>
-</html>
+          document
