@@ -1,103 +1,160 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>TagRace Journey Map</title>
+  <title>TagRace GPS Check-In</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; background: #0b0f1a; }
-    #map { width: 100%; height: 100%; }
-    #info {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      background: rgba(10, 15, 30, 0.85);
-      color: #e0f7ff;
-      padding: 14px 18px;
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      line-height: 1.6;
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2em;
+      background: url('tagrace-bg.png') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
     }
-    .mapboxgl-popup-content {
-      background: #1c2333;
-      color: #e0f7ff;
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 14px;
+    button {
+      font-size: 1.2em;
+      padding: 0.6em 1.2em;
+      margin-top: 1em;
+      border: none;
       border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 0px rgba(255, 255, 255, 0);
+    }
+    button:active {
+      transform: scale(0.98);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+    }
+    button:hover {
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+    }
+    .primary {
+      background-color: #00A859;
+      color: white;
+    }
+    .primary:hover {
+      background-color: #00cc6a;
+    }
+    .secondary {
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    .secondary:hover {
+      background-color: #ffffff;
+    }
+    #status {
+      margin-top: 1.5em;
+      font-size: 1em;
+    }
+    #description {
+      font-size: 1em;
+      margin-bottom: 1.5em;
+      line-height: 1.5;
+      background: rgba(0,0,0,0.5);
+      padding: 1em;
+      border-radius: 8px;
+      display: inline-block;
+    }
+    #location-info {
+      margin-top: 1em;
+      font-size: 1em;
+      background: rgba(0,0,0,0.5);
+      padding: 1em;
+      border-radius: 8px;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
-  <div id="map"></div>
-  <div id="info">📍 Loading journey stats…</div>
+  <h1>TagRace GPS Check-In</h1>
+
+  <p id="description">
+    🌍 This tag is part of <strong>TagRace</strong>—a global adventure tracking real-world movement.<br>
+    It's currently on a journey to <strong>Hope, British Columbia</strong>, carried by players, travelers, and dreamers.<br>
+    Every check-in helps trace its path across continents.<br><br>
+    🏁 <strong>Help this tag reach its final destination!</strong>
+  </p>
+
+  <div id="location-info">📍 Loading last known location…</div>
+
+  <button class="primary" onclick="getLocation()">⚡ Click to update the tag location!</button>
+  <div id="status">Waiting for check-in…</div>
+
+  <a href="map.html" target="_blank">
+    <button class="secondary">🗺️ View the Journey!</button>
+  </a>
 
   <script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoibWljaGFlbGNyMTgiLCJhIjoiY21mcWxmNmpwMHNmYTJrcHllemllZG4zaSJ9.un1xljHZgdbNi0mp_OScSA';
+    function getLocation() {
+      if (!navigator.geolocation) {
+        document.getElementById("status").innerText = "❌ Geolocation not supported.";
+        return;
+      }
 
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/navigation-night-v1',
-      center: [30.9826, -25.4996],
-      zoom: 5
-    });
-
-    const finalDestination = {
-      name: "Hope, British Columbia",
-      lat: 49.3794,
-      lon: -121.4414
-    };
-
-    function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371;
-      const toRad = deg => deg * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
+      navigator.geolocation.getCurrentPosition(success, error);
     }
 
-    fetch('https://sheetdb.io/api/v1/fyyvku4q2tqb0')
+    function success(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const location = `${lat},${lon}`;
+
+      const payload = {
+        tagId: "ZA-004",
+        location: location,
+        battery: "3.8V",
+        status: "active",
+        timestamp: new Date().toISOString()
+      };
+
+      console.log("📤 Sending payload:", payload);
+      document.getElementById("status").innerText = "📡 Sending check-in…";
+
+      fetch("https://tagrace-webhook.onrender.com/smarttag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(res => {
+        if (res.ok) {
+          document.getElementById("status").innerText = "✅ Check-in successful!";
+        } else {
+          throw new Error("Server error");
+        }
+      })
+      .catch(err => {
+        console.error("❌ Fetch error:", err);
+        document.getElementById("status").innerText = "❌ Error sending check-in.";
+      });
+    }
+
+    function error(err) {
+      document.getElementById("status").innerText = "❌ Location error: " + err.message;
+    }
+
+    // Fetch last known location
+    fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
       .then(res => res.json())
       .then(data => {
-        const bounds = new mapboxgl.LngLatBounds();
-        const points = [];
+        const valid = data.filter(entry => entry.location && entry.location.includes(','));
+        const last = valid[valid.length - 1];
+        const finalDestination = "Hope, British Columbia (49.3794, -121.4414)";
 
-        data.forEach(entry => {
-          if (!entry.location || !entry.location.includes(',')) return;
-          const [lat, lon] = entry.location.split(',').map(Number);
-          if (isNaN(lat) || isNaN(lon)) return;
-
-          points.push({ lat, lon });
-
-          new mapboxgl.Marker({ color: '#00BFFF' })
-            .setLngLat([lon, lat])
-            .setPopup(new mapboxgl.Popup().setText(`📍 ${entry.tagId} @ ${entry.timestamp}`))
-            .addTo(map);
-
-          bounds.extend([lon, lat]);
-        });
-
-        map.on('load', () => {
-          // Final destination marker
-          new mapboxgl.Marker({ color: '#FF4500' })
-            .setLngLat([finalDestination.lon, finalDestination.lat])
-            .setPopup(new mapboxgl.Popup().setText(`🏁 Final Destination: ${finalDestination.name}`))
-            .addTo(map);
-
-          bounds.extend([finalDestination.lon, finalDestination.lat]);
-
-          if (!bounds.isEmpty()) {
-            map.fitBounds(bounds, { padding: 60 });
-          }
-
-          // Route line
-          if (points.length >= 2) {
-            const routeGeoJSON = {
-              type: "Feature",
-              geometry: {
-                type: "LineString",
-                coordinates: points
+        if (last) {
+          document.getElementById("location-info").innerHTML = `
+            📍 <strong>Last Check-In:</strong> ${last.location}<br>
+            🕒 <strong>Timestamp:</strong> ${last.timestamp}<br>
+            🏁 <strong>Final Destination:</strong> ${finalDestination}
+          `;
+        } else {
+          document.getElementById("location-info").innerText = "📍 No check-ins yet.";
+        }
+      })
+      .catch(err => {
+        console.error("❌ Error loading last location:", err);
+        document.getElementById("location-info").innerText = "❌ Error loading last location.";
+      });
+  </script>
+</body>
+</html>
