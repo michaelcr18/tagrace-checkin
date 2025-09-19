@@ -6,18 +6,27 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; }
+    html, body { margin: 0; padding: 0; height: 100%; background: #111; }
     #map { width: 100%; height: 100%; }
     #info {
       position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background: white;
-      padding: 10px;
-      font-family: sans-serif;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 14px 18px;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      line-height: 1.6;
+    }
+    .mapboxgl-popup-content {
+      background: #222;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
       font-size: 14px;
       border-radius: 6px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.3);
     }
   </style>
 </head>
@@ -30,7 +39,7 @@
 
     const map = new mapboxgl.Map({
       container: 'map',
-      style: 'mapbox://styles/mapbox/streets-v11',
+      style: 'mapbox://styles/mapbox/dark-v11',
       center: [30.9826, -25.4996],
       zoom: 5
     });
@@ -42,7 +51,7 @@
     };
 
     function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371; // km
+      const R = 6371;
       const toRad = deg => deg * Math.PI / 180;
       const dLat = toRad(lat2 - lat1);
       const dLon = toRad(lon2 - lon1);
@@ -64,7 +73,7 @@
 
           points.push({ lat, lon });
 
-          new mapboxgl.Marker()
+          new mapboxgl.Marker({ color: '#00BFFF' })
             .setLngLat([lon, lat])
             .setPopup(new mapboxgl.Popup().setText(`📍 ${entry.tagId} @ ${entry.timestamp}`))
             .addTo(map);
@@ -72,8 +81,8 @@
           bounds.extend([lon, lat]);
         });
 
-        // Add final destination marker
-        new mapboxgl.Marker({ color: 'red' })
+        // Final destination marker
+        new mapboxgl.Marker({ color: '#FF4500' })
           .setLngLat([finalDestination.lon, finalDestination.lat])
           .setPopup(new mapboxgl.Popup().setText(`🏁 Final Destination: ${finalDestination.name}`))
           .addTo(map);
@@ -81,10 +90,10 @@
         bounds.extend([finalDestination.lon, finalDestination.lat]);
 
         if (!bounds.isEmpty()) {
-          map.fitBounds(bounds, { padding: 50 });
+          map.fitBounds(bounds, { padding: 60 });
         }
 
-        // Draw route line
+        // Route line
         if (points.length >= 2) {
           const routeGeoJSON = {
             type: "Feature",
@@ -106,26 +115,26 @@
               source: 'route',
               layout: { 'line-join': 'round', 'line-cap': 'round' },
               paint: {
-                'line-color': '#0078D7',
-                'line-width': 4
+                'line-color': ['interpolate', ['linear'], ['line-progress'], 0, '#00BFFF', 1, '#FF4500'],
+                'line-width': 5,
+                'line-opacity': 0.9
               }
             });
           });
         }
 
-        // Calculate total distance
+        // Distance calculations
         let totalKm = 0;
         for (let i = 1; i < points.length; i++) {
           totalKm += haversine(points[i-1].lat, points[i-1].lon, points[i].lat, points[i].lon);
         }
 
-        // Distance to final destination
         const last = points[points.length - 1];
         const toFinalKm = last ? haversine(last.lat, last.lon, finalDestination.lat, finalDestination.lon) : 0;
 
         const info = `
-          🧭 Total Distance Traveled: ${totalKm.toFixed(2)} km (${(totalKm * 0.621371).toFixed(2)} mi)<br>
-          📍 Distance to Final Destination: ${toFinalKm.toFixed(2)} km (${(toFinalKm * 0.621371).toFixed(2)} mi)
+          🧭 <strong>Total Distance Traveled:</strong> ${totalKm.toFixed(2)} km (${(totalKm * 0.621371).toFixed(2)} mi)<br>
+          📍 <strong>Distance to Final Destination:</strong> ${toFinalKm.toFixed(2)} km (${(toFinalKm * 0.621371).toFixed(2)} mi)
         `;
         document.getElementById("info").innerHTML = info;
       })
