@@ -28,11 +28,11 @@
       max-width: 300px;
       color: white;
     }
-    button:hover, label:hover {
+    button:hover {
       background-color: rgba(255, 255, 255, 0.1);
       box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
     }
-    button:active, label:active {
+    button:active {
       transform: scale(0.98);
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
     }
@@ -72,12 +72,6 @@
   <input type="text" id="name" placeholder="Your name (optional)">
   <br>
 
-  <label for="photo" style="display: inline-block; margin-top: 1em; padding: 0.6em 1em; border: 2px solid white; border-radius: 6px; background-color: transparent; color: white; cursor: pointer;">
-    📷 Add photo (optional)
-  </label>
-  <input type="file" id="photo" accept="image/*" style="display: none;">
-  <br>
-
   <button onclick="getLocation()">⚡ Click to update the tag location!</button>
   <div id="status">Waiting for check-in…</div>
 
@@ -105,20 +99,7 @@
         const nameInput = document.getElementById("name").value.trim();
         const name = nameInput || "Anonymous";
 
-        const photoInput = document.getElementById("photo");
-        let photoURL = "";
-
-        if (photoInput.files.length > 0) {
-          const file = photoInput.files[0];
-          const reader = new FileReader();
-          reader.onloadend = async () => {
-            photoURL = reader.result;
-            await sendPayload({ tagId: "ZA-004", location, battery: "3.8V", status: "active", timestamp: new Date().toISOString(), name, photo: photoURL });
-          };
-          reader.readAsDataURL(file);
-        } else {
-          await sendPayload({ tagId: "ZA-004", location, battery: "3.8V", status: "active", timestamp: new Date().toISOString(), name, photo: "" });
-        }
+        await sendPayload({ tagId: "ZA-004", location, battery: "3.8V", status: "active", timestamp: new Date().toISOString(), name });
       }, err => {
         document.getElementById("status").innerText = "❌ Location error: " + err.message;
       });

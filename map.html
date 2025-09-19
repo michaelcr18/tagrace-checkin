@@ -3,149 +3,54 @@
 <head>
   <title>TagRace Journey Map</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; background: #0b0f1a; }
-    #map { width: 100%; height: 100%; }
-    #info {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      background: rgba(10,15,30,0.85);
-      color: #e0f7ff;
-      padding: 14px 18px;
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      line-height: 1.6;
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
     }
-    .mapboxgl-popup-content {
-      background: #1c2333;
-      color: #e0f7ff;
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 14px;
-      border-radius: 6px;
-    }
-    .popup-photo {
-      margin-top: 8px;
-      max-width: 220px;
-      border-radius: 6px;
-      box-shadow: 0 0 6px rgba(0,0,0,0.4);
+    #map {
+      height: 100%;
+      width: 100%;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <div id="info">📍 Loading journey stats…</div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoibWljaGFlbGNyMTgiLCJhIjoiY21mcWxmNmpwMHNmYTJrcHllemllZG4zaSJ9.un1xljHZgdbNi0mp_OScSA';
+    const map = L.map('map').setView([49.3794, -121.4414], 4);
 
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/navigation-night-v1',
-      center: [30.98, -25.47],
-      zoom: 5
-    });
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-    const finalDestination = {
-      name: "Hope, British Columbia",
-      lat: 49.3794,
-      lon: -121.4414
-    };
-
-    function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371;
-      const toRad = deg => deg * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    }
-
-    fetch('https://sheetdb.io/api/v1/fyyvku4q2tqb0')
+    fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
       .then(res => res.json())
       .then(data => {
-        const bounds = new mapboxgl.LngLatBounds();
-        const points = [];
-
-        data.forEach(entry => {
-          if (!entry.location || !entry.location.includes(',')) return;
+        const valid = data.filter(entry => entry.location && entry.location.includes(','));
+        valid.forEach(entry => {
           const [lat, lon] = entry.location.split(',').map(Number);
-          if (isNaN(lat) || isNaN(lon)) return;
-
-          points.push({ lat, lon });
-
-          const name = entry.name?.trim() || "Anonymous";
-          const photo = entry.photo?.startsWith("data:image") ? `<br><img src="${entry.photo}" class="popup-photo">` : "";
-
-          const popupHTML = `
-            👤 <strong>${name}</strong><br>
-            📍 ${entry.tagId} @ ${entry.timestamp}${photo}
-          `;
-
-          new mapboxgl.Marker({ color: '#00BFFF' })
-            .setLngLat([lon, lat])
-            .setPopup(new mapboxgl.Popup().setHTML(popupHTML))
-            .addTo(map);
-
-          bounds.extend([lon, lat]);
+          const name = entry.name || "Anonymous";
+          const marker = L.marker([lat, lon]).addTo(map);
+          marker.bindPopup(`
+            <strong>${name}</strong><br>
+            ${entry.timestamp}
+          `);
         });
 
-        new mapboxgl.Marker({ color: '#FF4500' })
-          .setLngLat([finalDestination.lon, finalDestination.lat])
-          .setPopup(new mapboxgl.Popup().setText(`🏁 Final Destination: ${finalDestination.name}`))
-          .addTo(map);
-
-        bounds.extend([finalDestination.lon, finalDestination.lat]);
-
-        if (!bounds.isEmpty()) {
-          map.fitBounds(bounds, { padding: 60 });
+        if (valid.length > 0) {
+          const latlngs = valid.map(entry => entry.location.split(',').map(Number));
+          L.polyline(latlngs, { color: 'yellow' }).addTo(map);
+          const finalMarker = L.marker([49.3794, -121.4414], { title: "Final Destination" }).addTo(map);
+          finalMarker.bindPopup("<strong>🏁 Hope, British Columbia</strong>");
         }
-
-        if (points.length >= 2) {
-          const routeGeoJSON = {
-            type: "Feature",
-            geometry: {
-              type: "LineString",
-              coordinates: points.map(p => [p.lon, p.lat])
-            }
-          };
-
-          map.addSource('route', { type: 'geojson', data: routeGeoJSON });
-
-          map.addLayer({
-            id: 'route-line',
-            type: 'line',
-            source: 'route',
-            layout: { 'line-join': 'round', 'line-cap': 'round' },
-            paint: {
-              'line-color': '#FF4500',
-              'line-width': 5,
-              'line-opacity': 0.9
-            }
-          });
-        }
-
-        let totalKm = 0;
-        for (let i = 1; i < points.length; i++) {
-          totalKm += haversine(points[i-1].lat, points[i-1].lon, points[i].lat, points[i].lon);
-        }
-
-        const last = points[points.length - 1];
-        const toFinalKm = last ? haversine(last.lat, last.lon, finalDestination.lat, finalDestination.lon) : 0;
-
-        document.getElementById("info").innerHTML = `
-          🧭 <strong>Total Distance Traveled:</strong> ${totalKm.toFixed(2)} km (${(totalKm * 0.621371).toFixed(2)} mi)<br>
-          📍 <strong>Distance to Final Destination:</strong> ${toFinalKm.toFixed(2)} km (${(toFinalKm * 0.621371).toFixed(2)} mi)
-        `;
       })
       .catch(err => {
         console.error("❌ Error loading map data:", err);
-        document.getElementById("info").innerText = "❌ Error loading journey stats.";
       });
   </script>
 </body>
