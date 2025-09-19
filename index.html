@@ -40,6 +40,8 @@
 
   <script>
     async function checkIn() {
+      alert("Button clicked!"); // Debug line
+
       document.getElementById("status").innerText = "📡 Getting location…";
 
       navigator.geolocation.getCurrentPosition(async (pos) => {
