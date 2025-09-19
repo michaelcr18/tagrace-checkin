@@ -1,39 +1,47 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>TagRace GPS Debug</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 2em; }
-    button { padding: 1em 2em; font-size: 1.2em; }
-    #status { margin-top: 1em; }
-  </style>
-</head>
-<body>
-  <h1>GPS Debug</h1>
-  <button onclick="getLocation()">Get Location</button>
-  <div id="status"></div>
+<script>
+  function getLocation() {
+    document.getElementById("status").innerText = "📡 Getting location…";
 
-  <script>
-    function getLocation() {
-      document.getElementById("status").innerText = "📡 Getting location…";
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const coords = `${lat},${lon}`;
+        document.getElementById("status").innerText = `✅ Location: ${coords}`;
 
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-          document.getElementById("status").innerText = `✅ Location: ${lat}, ${lon}`;
-        },
-        (err) => {
-          document.getElementById("status").innerText = `⚠️ Error: ${err.message}`;
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    }
-  </script>
-</body>
-</html>
+        // 🔥 Send to webhook
+        fetch("https://tagrace-webhook.onrender.com/smarttag", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            tagId: "ZA-004",
+            location: coords,
+            battery: "3.8V",
+            status: "active"
+          })
+        })
+        .then((response) => {
+          if (response.ok) {
+            console.log("✅ POST succeeded");
+          } else {
+            console.error("❌ POST failed:", response.status);
+          }
+        })
+        .catch((error) => {
+          console.error("❌ POST error:", error);
+        });
+      },
+      (err) => {
+        document.getElementById("status").innerText = `⚠️ Error: ${err.message}`;
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  }
+</script>
+
