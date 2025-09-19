@@ -40,7 +40,7 @@
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/navigation-night-v1',
-      center: [30.9826, -25.4996],
+      center: [30.98, -25.47],
       zoom: 5
     });
 
@@ -63,6 +63,7 @@
     fetch('https://sheetdb.io/api/v1/fyyvku4q2tqb0')
       .then(res => res.json())
       .then(data => {
+        console.log("✅ SheetDB data loaded:", data);
         const bounds = new mapboxgl.LngLatBounds();
         const points = [];
 
@@ -88,7 +89,17 @@
             .addTo(map);
 
           bounds.extend([finalDestination.lon, finalDestination.lat]);
-          if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 60 });
+
+          if (!bounds.isEmpty()) {
+            map.fitBounds(bounds, { padding: 60 });
+          } else {
+            map.setCenter([30.98, -25.47]);
+            map.setZoom(5);
+            new mapboxgl.Marker({ color: '#00FF00' })
+              .setLngLat([30.98, -25.47])
+              .setPopup(new mapboxgl.Popup().setText("Test Marker"))
+              .addTo(map);
+          }
 
           if (points.length >= 2) {
             const routeGeoJSON = {
