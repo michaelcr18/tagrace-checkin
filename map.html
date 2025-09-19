@@ -18,12 +18,11 @@
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v11',
-      center: [30.9826, -25.4996], // Initial center
+      center: [30.9826, -25.4996],
       zoom: 5
     });
 
-    // Fetch live check-ins from SheetDB
-    fetch('https://sheetdb.io/api/v1/YOUR_SHEETDB_ID')
+    fetch('https://sheetdb.io/api/v1/fyyvku4q2tqb0')
       .then(res => res.json())
       .then(data => {
         const bounds = new mapboxgl.LngLatBounds();
@@ -31,7 +30,7 @@
         data.forEach(entry => {
           if (!entry.location) return;
           const [lat, lon] = entry.location.split(',').map(Number);
-          const marker = new mapboxgl.Marker()
+          new mapboxgl.Marker()
             .setLngLat([lon, lat])
             .setPopup(new mapboxgl.Popup().setText(`📍 ${entry.tagId} @ ${entry.timestamp}`))
             .addTo(map);
