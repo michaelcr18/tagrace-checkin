@@ -76,9 +76,10 @@
         timestamp: new Date().toISOString()
       };
 
+      console.log("📤 Sending payload:", payload);
       document.getElementById("status").innerText = "📡 Sending check-in…";
 
-      fetch("https://tagrace-webhook.onrender.com/checkin", {
+      fetch("https://tagrace-webhook.onrender.com/smarttag", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -91,7 +92,7 @@
         }
       })
       .catch(err => {
-        console.error("❌ Error:", err);
+        console.error("❌ Fetch error:", err);
         document.getElementById("status").innerText = "❌ Error sending check-in.";
       });
     }
