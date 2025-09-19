@@ -12,15 +12,18 @@
       background-size: cover;
       color: white;
     }
-    button {
-      font-size: 1.2em;
-      padding: 0.6em 1.2em;
+    input, button {
+      font-size: 1em;
+      padding: 0.6em 1em;
       margin-top: 1em;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.3s ease;
-      box-shadow: 0 0 0px rgba(255, 255, 255, 0);
+    }
+    input {
+      width: 80%;
+      max-width: 300px;
     }
     button:active {
       transform: scale(0.98);
@@ -76,7 +79,10 @@
     🏁 <strong>Help this tag reach its final destination!</strong>
   </p>
 
-  <div id="location-info">📍 Loading last known location…</div>
+  <input type="text" id="name" placeholder="Your name (optional)">
+  <br>
+  <input type="file" id="photo" accept="image/*">
+  <br>
 
   <button class="primary" onclick="getLocation()">⚡ Click to update the tag location!</button>
   <div id="status">Waiting for check-in…</div>
@@ -84,6 +90,8 @@
   <a href="map.html" target="_blank">
     <button class="secondary">🗺️ View the Journey!</button>
   </a>
+
+  <div id="location-info">📍 Loading last known location…</div>
 
   <script>
     async function getLocation() {
@@ -96,41 +104,50 @@
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
         const location = `${lat},${lon}`;
+        const nameInput = document.getElementById("name").value.trim();
+        const name = nameInput || "Anonymous";
 
-        const payload = {
-          tagId: "ZA-004",
-          location: location,
-          battery: "3.8V",
-          status: "active",
-          timestamp: new Date().toISOString()
-        };
+        const photoInput = document.getElementById("photo");
+        let photoURL = "";
 
-        document.getElementById("status").innerText = "📡 Sending check-in…";
-
-        try {
-          const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
-
-          if (res.ok) {
-            document.getElementById("status").innerText = "✅ Check-in successful!";
-          } else {
-            const text = await res.text();
-            document.getElementById("status").innerText = `❌ Server error: ${text}`;
-          }
-        } catch (err) {
-          console.error("❌ Fetch error:", err);
-          document.getElementById("status").innerText = "❌ Network error: " + err.message;
+        if (photoInput.files.length > 0) {
+          const file = photoInput.files[0];
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            photoURL = reader.result;
+            await sendPayload({ tagId: "ZA-004", location, battery: "3.8V", status: "active", timestamp: new Date().toISOString(), name, photo: photoURL });
+          };
+          reader.readAsDataURL(file);
+        } else {
+          await sendPayload({ tagId: "ZA-004", location, battery: "3.8V", status: "active", timestamp: new Date().toISOString(), name, photo: "" });
         }
       }, err => {
         document.getElementById("status").innerText = "❌ Location error: " + err.message;
       });
     }
 
+    async function sendPayload(payload) {
+      document.getElementById("status").innerText = "📡 Sending check-in…";
+      try {
+        const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          document.getElementById("status").innerText = "✅ Check-in successful!";
+        } else {
+          const text = await res.text();
+          document.getElementById("status").innerText = `❌ Server error: ${text}`;
+        }
+      } catch (err) {
+        console.error("❌ Fetch error:", err);
+        document.getElementById("status").innerText = "❌ Network error: " + err.message;
+      }
+    }
+
     async function reverseGeocode(lat, lon) {
-      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=YOUR_GEOAPIFY_API_KEY`;
+      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=67cfc38cc2264ec5bd420c63df393331`;
       try {
         const res = await fetch(url);
         const data = await res.json();
