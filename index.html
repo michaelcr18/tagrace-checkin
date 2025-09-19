@@ -1,109 +1,104 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>TagRace Journey Map</title>
+  <title>TagRace GPS Check-In</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; }
-    #map { width: 100%; height: 100%; }
-    #info {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background: white;
-      padding: 10px;
+    body {
       font-family: sans-serif;
-      font-size: 14px;
+      text-align: center;
+      padding: 2em;
+      background-color: #f4f4f4;
+    }
+    button {
+      font-size: 1.2em;
+      padding: 0.6em 1.2em;
+      margin-top: 1em;
+      border: none;
       border-radius: 6px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 1.5em;
+      font-size: 1em;
+    }
+    #description {
+      font-size: 1em;
+      margin-bottom: 1.5em;
+      line-height: 1.4;
+    }
+    .primary {
+      background-color: #0078D7;
+      color: white;
+    }
+    .secondary {
+      background-color: #e0e0e0;
+      color: #333;
     }
   </style>
 </head>
 <body>
-  <div id="map"></div>
-  <div id="info">📍 Loading journey stats…</div>
+  <h1>TagRace GPS Check-In</h1>
+
+  <p id="description">
+    🌍 This tag is part of <strong>TagRace</strong>—a global adventure tracking real-world movement.<br>
+    It's currently on a journey to <strong>Hope, British Columbia</strong>, carried by players, travelers, and dreamers.<br>
+    Every check-in helps trace its path across continents.
+  </p>
+
+  <button class="primary" onclick="getLocation()">📍 Get Location</button>
+  <div id="status">Waiting for check-in…</div>
+
+  <a href="map.html" target="_blank">
+    <button class="secondary">🗺️ View the Journey!</button>
+  </a>
 
   <script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoibWljaGFlbGNyMTgiLCJhIjoiY21mcWxmNmpwMHNmYTJrcHllemllZG4zaSJ9.un1xljHZgdbNi0mp_OScSA';
+    function getLocation() {
+      if (!navigator.geolocation) {
+        document.getElementById("status").innerText = "❌ Geolocation not supported.";
+        return;
+      }
 
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [30.9826, -25.4996],
-      zoom: 5
-    });
-
-    const finalDestination = {
-      name: "Hope, British Columbia",
-      lat: 49.3794,
-      lon: -121.4414
-    };
-
-    function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371; // km
-      const toRad = deg => deg * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
+      navigator.geolocation.getCurrentPosition(success, error);
     }
 
-    fetch('https://sheetdb.io/api/v1/fyyvku4q2tqb0')
-      .then(res => res.json())
-      .then(data => {
-        const bounds = new mapboxgl.LngLatBounds();
-        const points = [];
+    function success(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const location = `${lat},${lon}`;
 
-        data.forEach(entry => {
-          if (!entry.location || !entry.location.includes(',')) return;
-          const [lat, lon] = entry.location.split(',').map(Number);
-          if (isNaN(lat) || isNaN(lon)) return;
+      const payload = {
+        tagId: "ZA-004",
+        location: location,
+        battery: "3.8V",
+        status: "active",
+        timestamp: new Date().toISOString()
+      };
 
-          points.push({ lat, lon });
+      document.getElementById("status").innerText = "📡 Sending check-in…";
 
-          new mapboxgl.Marker()
-            .setLngLat([lon, lat])
-            .setPopup(new mapboxgl.Popup().setText(`📍 ${entry.tagId} @ ${entry.timestamp}`))
-            .addTo(map);
-
-          bounds.extend([lon, lat]);
-        });
-
-        // Add final destination marker
-        new mapboxgl.Marker({ color: 'red' })
-          .setLngLat([finalDestination.lon, finalDestination.lat])
-          .setPopup(new mapboxgl.Popup().setText(`🏁 Final Destination: ${finalDestination.name}`))
-          .addTo(map);
-
-        bounds.extend([finalDestination.lon, finalDestination.lat]);
-
-        if (!bounds.isEmpty()) {
-          map.fitBounds(bounds, { padding: 50 });
+      fetch("https://tagrace-webhook.onrender.com/checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(res => {
+        if (res.ok) {
+          document.getElementById("status").innerText = "✅ Check-in successful!";
+        } else {
+          throw new Error("Server error");
         }
-
-        // Calculate total distance
-        let totalKm = 0;
-        for (let i = 1; i < points.length; i++) {
-          totalKm += haversine(points[i-1].lat, points[i-1].lon, points[i].lat, points[i].lon);
-        }
-
-        // Distance to final destination
-        const last = points[points.length - 1];
-        const toFinalKm = last ? haversine(last.lat, last.lon, finalDestination.lat, finalDestination.lon) : 0;
-
-        const info = `
-          🧭 Total Distance Traveled: ${totalKm.toFixed(2)} km (${(totalKm * 0.621371).toFixed(2)} mi)<br>
-          📍 Distance to Final Destination: ${toFinalKm.toFixed(2)} km (${(toFinalKm * 0.621371).toFixed(2)} mi)
-        `;
-        document.getElementById("info").innerHTML = info;
       })
       .catch(err => {
-        console.error("❌ Error loading map data:", err);
-        document.getElementById("info").innerText = "❌ Error loading journey stats.";
+        console.error("❌ Error:", err);
+        document.getElementById("status").innerText = "❌ Error sending check-in.";
       });
+    }
+
+    function error(err) {
+      document.getElementById("status").innerText = "❌ Location error: " + err.message;
+    }
   </script>
 </body>
 </html>
