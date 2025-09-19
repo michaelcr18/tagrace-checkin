@@ -1,89 +1,170 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>TagRace Check-In</title>
+  <title>TagRace GPS Check-In</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2em;
+      background: url('tagrace-bg.png') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+    }
+    button {
+      font-size: 1.2em;
+      padding: 0.6em 1.2em;
+      margin-top: 1em;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 0px rgba(255, 255, 255, 0);
+    }
+    button:active {
+      transform: scale(0.98);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+    }
+    button:hover {
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+    }
+    .primary {
+      background-color: #00A859;
+      color: white;
+    }
+    .primary:hover {
+      background-color: #00cc6a;
+    }
+    .secondary {
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    .secondary:hover {
+      background-color: #ffffff;
+    }
+    #status {
+      margin-top: 1.5em;
+      font-size: 1em;
+    }
+    #description {
+      font-size: 1em;
+      margin-bottom: 1.5em;
+      line-height: 1.5;
+      background: rgba(0,0,0,0.5);
+      padding: 1em;
+      border-radius: 8px;
+      display: inline-block;
+    }
+    #location-info {
+      margin-top: 1em;
+      font-size: 1em;
+      background: rgba(0,0,0,0.5);
+      padding: 1em;
+      border-radius: 8px;
+      display: inline-block;
+    }
+  </style>
 </head>
 <body>
   <h1>TagRace GPS Check-In</h1>
 
-  <p>
-    This tag is on a journey to <strong>Hope, British Columbia</strong>.<br>
-    Click the button below to check in your current location.
+  <p id="description">
+    🌍 This tag is part of <strong>TagRace</strong>—a global adventure tracking real-world movement.<br>
+    It's currently on a journey to <strong>Hope, British Columbia</strong>, carried by players, travelers, and dreamers.<br>
+    Every check-in helps trace its path across continents.<br><br>
+    🏁 <strong>Help this tag reach its final destination!</strong>
   </p>
 
   <div id="location-info">📍 Loading last known location…</div>
 
-  <button onclick="getLocation()">Click to update the tag location!</button>
+  <button class="primary" onclick="getLocation()">⚡ Click to update the tag location!</button>
   <div id="status">Waiting for check-in…</div>
 
+  <a href="map.html" target="_blank">
+    <button class="secondary">🗺️ View the Journey!</button>
+  </a>
+
   <script>
-    function getLocation() {
+    async function getLocation() {
       if (!navigator.geolocation) {
-        document.getElementById("status").innerText = "Geolocation not supported.";
+        document.getElementById("status").innerText = "❌ Geolocation not supported.";
         return;
       }
 
-      navigator.geolocation.getCurrentPosition(success, error);
-    }
+      navigator.geolocation.getCurrentPosition(async position => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const location = `${lat},${lon}`;
 
-    function success(position) {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      const location = `${lat},${lon}`;
+        const payload = {
+          tagId: "ZA-004",
+          location: location,
+          battery: "3.8V",
+          status: "active",
+          timestamp: new Date().toISOString()
+        };
 
-      const payload = {
-        tagId: "ZA-004",
-        location: location,
-        battery: "3.8V",
-        status: "active",
-        timestamp: new Date().toISOString()
-      };
+        document.getElementById("status").innerText = "📡 Sending check-in…";
 
-      document.getElementById("status").innerText = "Sending check-in…";
+        try {
+          const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
 
-      fetch("https://tagrace-webhook.onrender.com/smarttag", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
-      .then(res => {
-        if (res.ok) {
-          document.getElementById("status").innerText = "Check-in successful!";
-        } else {
-          document.getElementById("status").innerText = "Server error.";
+          if (res.ok) {
+            document.getElementById("status").innerText = "✅ Check-in successful!";
+          } else {
+            const text = await res.text();
+            document.getElementById("status").innerText = `❌ Server error: ${text}`;
+          }
+        } catch (err) {
+          console.error("❌ Fetch error:", err);
+          document.getElementById("status").innerText = "❌ Network error: " + err.message;
         }
-      })
-      .catch(err => {
-        console.error("Fetch error:", err);
-        document.getElementById("status").innerText = "Network error.";
+      }, err => {
+        document.getElementById("status").innerText = "❌ Location error: " + err.message;
       });
     }
 
-    function error(err) {
-      document.getElementById("status").innerText = "Location error: " + err.message;
+    async function reverseGeocode(lat, lon) {
+      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=YOUR_GEOAPIFY_API_KEY`;
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const town = data.features[0]?.properties?.city || data.features[0]?.properties?.town || "Unknown location";
+        return town;
+      } catch (err) {
+        console.error("❌ Reverse geocoding failed:", err);
+        return "Unknown location";
+      }
     }
 
     fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
       .then(res => res.json())
-      .then(data => {
+      .then(async data => {
         const valid = data.filter(entry => entry.location && entry.location.includes(','));
         const last = valid[valid.length - 1];
         const finalDestination = "Hope, British Columbia (49.3794, -121.4414)";
 
         if (last) {
+          const [lat, lon] = last.location.split(',').map(Number);
+          const town = await reverseGeocode(lat, lon);
+
           document.getElementById("location-info").innerHTML = `
-            Last Check-In: ${last.location}<br>
-            Timestamp: ${last.timestamp}<br>
-            Final Destination: ${finalDestination}
+            📍 <strong>Last Check-In:</strong> near ${town}<br>
+            🕒 <strong>Timestamp:</strong> ${last.timestamp}<br>
+            🏁 <strong>Final Destination:</strong> ${finalDestination}
           `;
         } else {
-          document.getElementById("location-info").innerText = "No check-ins yet.";
+          document.getElementById("location-info").innerText = "📍 No check-ins yet.";
         }
       })
       .catch(err => {
-        console.error("Error loading last location:", err);
-        document.getElementById("location-info").innerText = "Error loading last location.";
+        console.error("❌ Error loading last location:", err);
+        document.getElementById("location-info").innerText = "❌ Error loading last location.";
       });
   </script>
 </body>
