@@ -8,7 +8,9 @@
       font-family: sans-serif;
       text-align: center;
       padding: 2em;
-      background-color: #f4f4f4;
+      background: url('tagrace-bg.png') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
     }
     button {
       font-size: 1.2em;
@@ -25,14 +27,18 @@
     #description {
       font-size: 1em;
       margin-bottom: 1.5em;
-      line-height: 1.4;
+      line-height: 1.5;
+      background: rgba(0,0,0,0.5);
+      padding: 1em;
+      border-radius: 8px;
+      display: inline-block;
     }
     .primary {
-      background-color: #0078D7;
+      background-color: #00A859;
       color: white;
     }
     .secondary {
-      background-color: #e0e0e0;
+      background-color: #f4f4f4;
       color: #333;
     }
   </style>
@@ -43,10 +49,11 @@
   <p id="description">
     🌍 This tag is part of <strong>TagRace</strong>—a global adventure tracking real-world movement.<br>
     It's currently on a journey to <strong>Hope, British Columbia</strong>, carried by players, travelers, and dreamers.<br>
-    Every check-in helps trace its path across continents.
+    Every check-in helps trace its path across continents.<br><br>
+    🏁 <strong>Help this tag reach its final destination!</strong>
   </p>
 
-  <button class="primary" onclick="getLocation()">📍 Get Location</button>
+  <button class="primary" onclick="getLocation()">⚡ Click to update the tag location!</button>
   <div id="status">Waiting for check-in…</div>
 
   <a href="map.html" target="_blank">
@@ -98,8 +105,4 @@
     }
 
     function error(err) {
-      document.getElementById("status").innerText = "❌ Location error: " + err.message;
-    }
-  </script>
-</body>
-</html>
+      document.getElement
