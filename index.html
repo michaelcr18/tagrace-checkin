@@ -1,64 +1,48 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>TagRace GPS Check-In</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 2em; }
-    button { padding: 1em 2em; font-size: 1.2em; }
-    #status { margin-top: 1em; font-size: 1.1em; }
-  </style>
-</head>
-<body>
-  <h1>TagRace GPS Check-In</h1>
-  <button onclick="getLocation()">Get Location</button>
-  <div id="status">📍 Waiting for check-in…</div>
+<script>
+function getLocation() {
+  if (!navigator.geolocation) {
+    document.getElementById("status").innerText = "❌ Geolocation not supported.";
+    return;
+  }
 
-  <script>
-    function getLocation() {
-      document.getElementById("status").innerText = "📡 Getting location…";
+  navigator.geolocation.getCurrentPosition(success, error);
+}
 
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-          const coords = `${lat},${lon}`;
-          document.getElementById("status").innerText = `✅ Location: ${coords}`;
+function success(position) {
+  const lat = position.coords.latitude;
+  const lon = position.coords.longitude;
+  const location = `${lat},${lon}`;
 
-          // 🔥 Send to webhook
-          fetch("https://tagrace-webhook.onrender.com/smarttag", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              tagId: "ZA-004",
-              location: coords,
-              battery: "3.8V",
-              status: "active"
-            })
-          })
-          .then((response) => {
-            if (response.ok) {
-              console.log("✅ POST succeeded");
-            } else {
-              console.error("❌ POST failed:", response.status);
-            }
-          })
-          .catch((error) => {
-            console.error("❌ POST error:", error);
-          });
-        },
-        (err) => {
-          document.getElementById("status").innerText = `⚠️ Error: ${err.message}`;
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    }
-  </script>
-</body>
-</html>
+  const payload = {
+    tagId: "ZA-004",
+    location: location,
+    battery: "3.8V",
+    status: "active",
+    timestamp: new Date().toISOString()
+  };
+
+  document.getElementById("status").innerText = "📡 Sending check-in…";
+
+  fetch("https://tagrace-webhook.onrender.com/checkin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Server error");
+    return res.json();
+  })
+  .then(data => {
+    console.log("✅ Response:", data);
+    document.getElementById("status").innerText = "✅ Check-in successful!";
+  })
+  .catch(err => {
+    console.error("❌ Error:", err);
+    document.getElementById("status").innerText = "❌ Error sending check-in.";
+  });
+}
+
+function error(err) {
+  document.getElementById("status").innerText = "❌ Location error: " + err.message;
+}
+</script>
