@@ -76,4 +76,84 @@
     🏁 <strong>Help this tag reach its final destination!</strong>
   </p>
 
-  <div id="
+  <div id="location-info">📍 Loading last known location…</div>
+
+  <button class="primary" onclick="getLocation()">⚡ Click to update the tag location!</button>
+  <div id="status">Waiting for check-in…</div>
+
+  <a href="map.html" target="_blank">
+    <button class="secondary">🗺️ View the Journey!</button>
+  </a>
+
+  <script>
+    function getLocation() {
+      if (!navigator.geolocation) {
+        document.getElementById("status").innerText = "❌ Geolocation not supported.";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(success, error);
+    }
+
+    function success(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const location = `${lat},${lon}`;
+
+      const payload = {
+        tagId: "ZA-004",
+        location: location,
+        battery: "3.8V",
+        status: "active",
+        timestamp: new Date().toISOString()
+      };
+
+      document.getElementById("status").innerText = "📡 Sending check-in…";
+
+      fetch("https://tagrace-webhook.onrender.com/smarttag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(res => {
+        if (res.ok) {
+          document.getElementById("status").innerText = "✅ Check-in successful!";
+        } else {
+          throw new Error("Server error");
+        }
+      })
+      .catch(err => {
+        console.error("❌ Fetch error:", err);
+        document.getElementById("status").innerText = "❌ Error sending check-in.";
+      });
+    }
+
+    function error(err) {
+      document.getElementById("status").innerText = "❌ Location error: " + err.message;
+    }
+
+    // Fetch last known location
+    fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
+      .then(res => res.json())
+      .then(data => {
+        const valid = data.filter(entry => entry.location && entry.location.includes(','));
+        const last = valid[valid.length - 1];
+        const finalDestination = "Hope, British Columbia (49.3794, -121.4414)";
+
+        if (last) {
+          document.getElementById("location-info").innerHTML = `
+            📍 <strong>Last Check-In:</strong> ${last.location}<br>
+            🕒 <strong>Timestamp:</strong> ${last.timestamp}<br>
+            🏁 <strong>Final Destination:</strong> ${finalDestination}
+          `;
+        } else {
+          document.getElementById("location-info").innerText = "📍 No check-ins yet.";
+        }
+      })
+      .catch(err => {
+        console.error("❌ Error loading last location:", err);
+        document.getElementById("location-info").innerText = "❌ Error loading last location.";
+      });
+  </script>
+</body>
+</html>
