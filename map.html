@@ -18,22 +18,26 @@
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v11',
-      center: [30.9826, -25.4996],
+      center: [30.9826, -25.4996], // Initial center
       zoom: 5
     });
 
     fetch('https://sheetdb.io/api/v1/fyyvku4q2tqb0')
       .then(res => res.json())
       .then(data => {
+        console.log("📦 SheetDB data:", data); // Debug log
         const bounds = new mapboxgl.LngLatBounds();
 
         data.forEach(entry => {
-          if (!entry.location) return;
+          if (!entry.location || !entry.location.includes(',')) return;
           const [lat, lon] = entry.location.split(',').map(Number);
+          if (isNaN(lat) || isNaN(lon)) return;
+
           new mapboxgl.Marker()
             .setLngLat([lon, lat])
             .setPopup(new mapboxgl.Popup().setText(`📍 ${entry.tagId} @ ${entry.timestamp}`))
             .addTo(map);
+
           bounds.extend([lon, lat]);
         });
 
