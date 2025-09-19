@@ -19,6 +19,29 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 0px rgba(255, 255, 255, 0);
+    }
+    button:active {
+      transform: scale(0.98);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+    }
+    button:hover {
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+    }
+    .primary {
+      background-color: #00A859;
+      color: white;
+    }
+    .primary:hover {
+      background-color: #00cc6a;
+    }
+    .secondary {
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    .secondary:hover {
+      background-color: #ffffff;
     }
     #status {
       margin-top: 1.5em;
@@ -33,13 +56,13 @@
       border-radius: 8px;
       display: inline-block;
     }
-    .primary {
-      background-color: #00A859;
-      color: white;
-    }
-    .secondary {
-      background-color: #f4f4f4;
-      color: #333;
+    #location-info {
+      margin-top: 1em;
+      font-size: 1em;
+      background: rgba(0,0,0,0.5);
+      padding: 1em;
+      border-radius: 8px;
+      display: inline-block;
     }
   </style>
 </head>
@@ -53,56 +76,4 @@
     🏁 <strong>Help this tag reach its final destination!</strong>
   </p>
 
-  <button class="primary" onclick="getLocation()">⚡ Click to update the tag location!</button>
-  <div id="status">Waiting for check-in…</div>
-
-  <a href="map.html" target="_blank">
-    <button class="secondary">🗺️ View the Journey!</button>
-  </a>
-
-  <script>
-    function getLocation() {
-      if (!navigator.geolocation) {
-        document.getElementById("status").innerText = "❌ Geolocation not supported.";
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(success, error);
-    }
-
-    function success(position) {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      const location = `${lat},${lon}`;
-
-      const payload = {
-        tagId: "ZA-004",
-        location: location,
-        battery: "3.8V",
-        status: "active",
-        timestamp: new Date().toISOString()
-      };
-
-      console.log("📤 Sending payload:", payload);
-      document.getElementById("status").innerText = "📡 Sending check-in…";
-
-      fetch("https://tagrace-webhook.onrender.com/smarttag", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
-      .then(res => {
-        if (res.ok) {
-          document.getElementById("status").innerText = "✅ Check-in successful!";
-        } else {
-          throw new Error("Server error");
-        }
-      })
-      .catch(err => {
-        console.error("❌ Fetch error:", err);
-        document.getElementById("status").innerText = "❌ Error sending check-in.";
-      });
-    }
-
-    function error(err) {
-      document.getElement
+  <div id="
