@@ -1,79 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>TagRace Check-In</title>
+  <title>TagRace GPS Debug</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 2em;
-      background: #f9f9f9;
-    }
-    h1 {
-      color: #333;
-    }
-    button {
-      padding: 1em 2em;
-      font-size: 1.2em;
-      background-color: #0078D4;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #005ea2;
-    }
-    #status {
-      margin-top: 1em;
-      font-size: 1em;
-      color: #444;
-    }
+    body { font-family: sans-serif; text-align: center; padding: 2em; }
+    button { padding: 1em 2em; font-size: 1.2em; }
+    #status { margin-top: 1em; }
   </style>
 </head>
 <body>
-  <h1>TagRace Check-In</h1>
-  <p>Tag ID: <strong id="tagId">ZA-004</strong></p>
-  <button onclick="checkIn()">Check In</button>
+  <h1>GPS Debug</h1>
+  <button onclick="getLocation()">Get Location</button>
   <div id="status"></div>
 
   <script>
-    async function checkIn() {
+    function getLocation() {
       document.getElementById("status").innerText = "📡 Getting location…";
 
       navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const location = `${pos.coords.latitude},${pos.coords.longitude}`;
-          const payload = {
-            tagId: "ZA-004",
-            location: location,
-            battery: "3.8V",
-            status: "active"
-          };
-
-          try {
-            const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-webhook-token": "mbombela-2025"
-              },
-              body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-              document.getElementById("status").innerText = "✅ Check-in successful!";
-            } else {
-              document.getElementById("status").innerText = "❌ Check-in failed.";
-            }
-          } catch (err) {
-            document.getElementById("status").innerText = "⚠️ Error sending data.";
-          }
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          document.getElementById("status").innerText = `✅ Location: ${lat}, ${lon}`;
         },
-        (error) => {
-          console.error("GPS error:", error);
-          document.getElementById("status").innerText = `⚠️ Location error: ${error.message}`;
+        (err) => {
+          document.getElementById("status").innerText = `⚠️ Error: ${err.message}`;
         },
         {
           enableHighAccuracy: true,
