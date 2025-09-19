@@ -23,15 +23,15 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-    input {
+    input[type="text"] {
       width: 80%;
       max-width: 300px;
     }
-    button:hover {
+    button:hover, label:hover {
       background-color: rgba(255, 255, 255, 0.1);
       box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
     }
-    button:active {
+    button:active, label:active {
       transform: scale(0.98);
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
     }
@@ -70,7 +70,11 @@
 
   <input type="text" id="name" placeholder="Your name (optional)">
   <br>
-  <input type="file" id="photo" accept="image/*">
+
+  <label for="photo" style="display: inline-block; margin-top: 1em; padding: 0.6em 1em; border: 2px solid white; border-radius: 6px; background-color: transparent; color: white; cursor: pointer;">
+    📷 Add a photo
+  </label>
+  <input type="file" id="photo" accept="image/*" style="display: none;">
   <br>
 
   <button onclick="getLocation()">⚡ Click to update the tag location!</button>
