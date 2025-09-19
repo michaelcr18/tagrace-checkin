@@ -8,30 +8,61 @@
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { width: 100%; height: 100%; }
+    #info {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: white;
+      padding: 10px;
+      font-family: sans-serif;
+      font-size: 14px;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
+  <div id="info">📍 Loading journey stats…</div>
+
   <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoibWljaGFlbGNyMTgiLCJhIjoiY21mcWxmNmpwMHNmYTJrcHllemllZG4zaSJ9.un1xljHZgdbNi0mp_OScSA';
 
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v11',
-      center: [30.9826, -25.4996], // Initial center
+      center: [30.9826, -25.4996],
       zoom: 5
     });
+
+    const finalDestination = {
+      name: "Hope, British Columbia",
+      lat: 49.3794,
+      lon: -121.4414
+    };
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371; // km
+      const toRad = deg => deg * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
 
     fetch('https://sheetdb.io/api/v1/fyyvku4q2tqb0')
       .then(res => res.json())
       .then(data => {
-        console.log("📦 SheetDB data:", data); // Debug log
         const bounds = new mapboxgl.LngLatBounds();
+        const points = [];
 
         data.forEach(entry => {
           if (!entry.location || !entry.location.includes(',')) return;
           const [lat, lon] = entry.location.split(',').map(Number);
           if (isNaN(lat) || isNaN(lon)) return;
+
+          points.push({ lat, lon });
 
           new mapboxgl.Marker()
             .setLngLat([lon, lat])
@@ -41,12 +72,66 @@
           bounds.extend([lon, lat]);
         });
 
+        // Add final destination marker
+        new mapboxgl.Marker({ color: 'red' })
+          .setLngLat([finalDestination.lon, finalDestination.lat])
+          .setPopup(new mapboxgl.Popup().setText(`🏁 Final Destination: ${finalDestination.name}`))
+          .addTo(map);
+
+        bounds.extend([finalDestination.lon, finalDestination.lat]);
+
         if (!bounds.isEmpty()) {
           map.fitBounds(bounds, { padding: 50 });
         }
+
+        // Draw route line
+        if (points.length >= 2) {
+          const routeGeoJSON = {
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: points.map(p => [p.lon, p.lat])
+            }
+          };
+
+          map.on('load', () => {
+            map.addSource('route', {
+              type: 'geojson',
+              data: routeGeoJSON
+            });
+
+            map.addLayer({
+              id: 'route-line',
+              type: 'line',
+              source: 'route',
+              layout: { 'line-join': 'round', 'line-cap': 'round' },
+              paint: {
+                'line-color': '#0078D7',
+                'line-width': 4
+              }
+            });
+          });
+        }
+
+        // Calculate total distance
+        let totalKm = 0;
+        for (let i = 1; i < points.length; i++) {
+          totalKm += haversine(points[i-1].lat, points[i-1].lon, points[i].lat, points[i].lon);
+        }
+
+        // Distance to final destination
+        const last = points[points.length - 1];
+        const toFinalKm = last ? haversine(last.lat, last.lon, finalDestination.lat, finalDestination.lon) : 0;
+
+        const info = `
+          🧭 Total Distance Traveled: ${totalKm.toFixed(2)} km (${(totalKm * 0.621371).toFixed(2)} mi)<br>
+          📍 Distance to Final Destination: ${toFinalKm.toFixed(2)} km (${(toFinalKm * 0.621371).toFixed(2)} mi)
+        `;
+        document.getElementById("info").innerHTML = info;
       })
       .catch(err => {
         console.error("❌ Error loading map data:", err);
+        document.getElementById("info").innerText = "❌ Error loading journey stats.";
       });
   </script>
 </body>
