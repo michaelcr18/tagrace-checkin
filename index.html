@@ -57,6 +57,13 @@
       border-radius: 8px;
       display: inline-block;
     }
+    @keyframes flashBolt {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(1.2); }
+    }
+    #status.flash {
+      animation: flashBolt 1s infinite;
+    }
   </style>
 </head>
 <body>
@@ -73,7 +80,7 @@
   <br>
 
   <button onclick="getLocation()">⚡ Click to update the tag location!</button>
-  <div id="status">Waiting for check-in…</div>
+  <div id="status" class="flash">⚡ Waiting for check-in…</div>
 
   <a href="map.html" target="_blank">
     <button>🗺️ View the Journey!</button>
@@ -106,7 +113,8 @@
     }
 
     async function sendPayload(payload) {
-      document.getElementById("status").innerText = "📡 Sending check-in…";
+      const status = document.getElementById("status");
+      status.innerText = "📡 Sending check-in…";
       try {
         const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
           method: "POST",
@@ -114,14 +122,15 @@
           body: JSON.stringify(payload)
         });
         if (res.ok) {
-          document.getElementById("status").innerText = "✅ Check-in successful!";
+          status.innerText = "✅ Check-in successful!";
+          status.classList.remove("flash");
         } else {
           const text = await res.text();
-          document.getElementById("status").innerText = `❌ Server error: ${text}`;
+          status.innerText = `❌ Server error: ${text}`;
         }
       } catch (err) {
         console.error("❌ Fetch error:", err);
-        document.getElementById("status").innerText = "❌ Network error: " + err.message;
+        status.innerText = "❌ Network error: " + err.message;
       }
     }
 
