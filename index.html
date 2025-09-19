@@ -119,12 +119,14 @@
         if (res.ok) {
           document.getElementById("status").innerText = "✅ Check-in successful!";
         } else {
-          throw new Error("Server error");
+          res.text().then(text => {
+            document.getElementById("status").innerText = `❌ Server error: ${text}`;
+          });
         }
       })
       .catch(err => {
         console.error("❌ Fetch error:", err);
-        document.getElementById("status").innerText = "❌ Error sending check-in.";
+        document.getElementById("status").innerText = "❌ Network error: " + err.message;
       });
     }
 
@@ -146,4 +148,13 @@
             🏁 <strong>Final Destination:</strong> ${finalDestination}
           `;
         } else {
-          document
+          document.getElementById("location-info").innerText = "📍 No check-ins yet.";
+        }
+      })
+      .catch(err => {
+        console.error("❌ Error loading last location:", err);
+        document.getElementById("location-info").innerText = "❌ Error loading last location.";
+      });
+  </script>
+</body>
+</html>
