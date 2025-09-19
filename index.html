@@ -16,8 +16,10 @@
       font-size: 1em;
       padding: 0.6em 1em;
       margin-top: 1em;
-      border: none;
+      border: 2px solid white;
       border-radius: 6px;
+      background-color: transparent;
+      color: white;
       cursor: pointer;
       transition: all 0.3s ease;
     }
@@ -25,26 +27,13 @@
       width: 80%;
       max-width: 300px;
     }
+    button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+    }
     button:active {
       transform: scale(0.98);
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
-    }
-    button:hover {
-      box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
-    }
-    .primary {
-      background-color: #00A859;
-      color: white;
-    }
-    .primary:hover {
-      background-color: #00cc6a;
-    }
-    .secondary {
-      background-color: #f4f4f4;
-      color: #333;
-    }
-    .secondary:hover {
-      background-color: #ffffff;
     }
     #status {
       margin-top: 1.5em;
@@ -84,14 +73,18 @@
   <input type="file" id="photo" accept="image/*">
   <br>
 
-  <button class="primary" onclick="getLocation()">⚡ Click to update the tag location!</button>
+  <button onclick="getLocation()">⚡ Click to update the tag location!</button>
   <div id="status">Waiting for check-in…</div>
 
   <a href="map.html" target="_blank">
-    <button class="secondary">🗺️ View the Journey!</button>
+    <button>🗺️ View the Journey!</button>
   </a>
 
   <div id="location-info">📍 Loading last known location…</div>
+
+  <p style="margin-top: 2em; font-size: 0.9em; color: white; opacity: 0.8;">
+    📸 Follow <strong>#TagRaceZA</strong> on Instagram to see the global journey unfold.
+  </p>
 
   <script>
     async function getLocation() {
