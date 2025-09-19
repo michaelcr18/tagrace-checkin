@@ -40,40 +40,47 @@
 
   <script>
     async function checkIn() {
-      alert("Button clicked!"); // Debug line
-
       document.getElementById("status").innerText = "📡 Getting location…";
 
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        const location = `${pos.coords.latitude},${pos.coords.longitude}`;
-        const payload = {
-          tagId: "ZA-004",
-          location: location,
-          battery: "3.8V",
-          status: "active"
-        };
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const location = `${pos.coords.latitude},${pos.coords.longitude}`;
+          const payload = {
+            tagId: "ZA-004",
+            location: location,
+            battery: "3.8V",
+            status: "active"
+          };
 
-        try {
-          const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-webhook-token": "mbombela-2025"
-            },
-            body: JSON.stringify(payload)
-          });
+          try {
+            const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-webhook-token": "mbombela-2025"
+              },
+              body: JSON.stringify(payload)
+            });
 
-          if (res.ok) {
-            document.getElementById("status").innerText = "✅ Check-in successful!";
-          } else {
-            document.getElementById("status").innerText = "❌ Check-in failed.";
+            if (res.ok) {
+              document.getElementById("status").innerText = "✅ Check-in successful!";
+            } else {
+              document.getElementById("status").innerText = "❌ Check-in failed.";
+            }
+          } catch (err) {
+            document.getElementById("status").innerText = "⚠️ Error sending data.";
           }
-        } catch (err) {
-          document.getElementById("status").innerText = "⚠️ Error sending data.";
+        },
+        (error) => {
+          console.error("GPS error:", error);
+          document.getElementById("status").innerText = `⚠️ Location error: ${error.message}`;
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
         }
-      }, () => {
-        document.getElementById("status").innerText = "⚠️ Location access denied.";
-      });
+      );
     }
   </script>
 </body>
