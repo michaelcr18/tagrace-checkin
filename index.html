@@ -122,110 +122,86 @@
   </p>
 
   <script>
-    async function getLocation() {
-      if (!navigator.geolocation) {
-        document.getElementById("status").innerText = "❌ Geolocation not supported.";
-        return;
-      }
+  async function getLocation() {
+    const status = document.getElementById("status");
+    status.innerText = "📡 Uploading photo…";
 
-      navigator.geolocation.getCurrentPosition(async position => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        const location = `${lat},${lon}`;
-        const nameInput = document.getElementById("name").value.trim();
-        const name = nameInput || "Anonymous";
+    const photoInput = document.getElementById("photo");
+    const file = photoInput.files[0];
 
-        await sendPayload({ tagId: "ZA-004", location, battery: "3.8V", status: "active", timestamp: new Date().toISOString(), name });
-      }, err => {
-        document.getElementById("status").innerText = "❌ Location error: " + err.message;
-      });
-    }
+    let photoUrl = "";
 
-    async function sendPayload(payload) {
-      const status = document.getElementById("status");
-      status.innerText = "📡 Sending check-in…";
-
-      const photoInput = document.getElementById("photo");
-      const file = photoInput.files[0];
-
-      let photoUrl = null;
-
-      if (file) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("UPLOADCARE_STORE", "1");
-        formData.append("UPLOADCARE_PUB_KEY", "b6fd2347b271da80d239");
-
-        try {
-          const res = await fetch("https://upload.uploadcare.com/base/", {
-            method: "POST",
-            body: formData
-          });
-          const data = await res.json();
-          photoUrl = data.cdnUrl;
-        } catch (err) {
-          console.error("❌ Photo upload failed:", err);
-        }
-      }
-
-      payload.photo = photoUrl;
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("UPLOADCARE_STORE", "1");
+      formData.append("UPLOADCARE_PUB_KEY", "b6fd2347b271da80d239");
 
       try {
-        const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
+        const res = await fetch("https://upload.uploadcare.com/base/", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: formData
         });
-        if (res.ok) {
-          status.innerText = "✅ Check-in successful!";
-          status.classList.remove("flash");
-        } else {
-          const text = await res.text();
-          status.innerText = `❌ Server error: ${text}`;
-        }
-      } catch (err) {
-        console.error("❌ Fetch error:", err);
-        status.innerText = "❌ Network error: " + err.message;
-      }
-    }
-
-    async function reverseGeocode(lat, lon) {
-      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=67cfc38cc2264ec5bd420c63df393331`;
-      try {
-        const res = await fetch(url);
         const data = await res.json();
-        const town = data.features[0]?.properties?.city || data.features[0]?.properties?.town || "Unknown location";
-        return town;
+        photoUrl = data.cdnUrl || "";
       } catch (err) {
-        console.error("❌ Reverse geocoding failed:", err);
-        return "Unknown location";
+        console.error("❌ Photo upload failed:", err);
       }
     }
 
-    fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
-      .then(res => res.json())
-      .then(async data => {
-        const valid = data.filter(entry => entry.location && entry.location.includes(','));
-        const last = valid[valid.length - 1];
-        const finalDestination = "Hope, British Columbia (49.3794, -121.4414)";
+    status.innerText = "📡 Getting location…";
 
-        if (last) {
-          const [lat, lon] = last.location.split(',').map(Number);
-          const town = await reverseGeocode(lat, lon);
+    if (!navigator.geolocation) {
+      status.innerText = "❌ Geolocation not supported.";
+      return;
+    }
 
-          document.getElementById("location-info").innerHTML = `
-            📍 <strong>Last Check-In:</strong> near ${town}<br>
-            🕒 <strong>Timestamp:</strong> ${last.timestamp}<br>
-            🏁 <strong>Final Destination:</strong> ${finalDestination}
-          `;
-        } else {
-          document.getElementById("location-info").innerText = "📍 No check-ins yet.";
-        }
-      })
-      .catch(err => {
-        console.error("❌ Error loading last location:", err);
-        document.getElementById("location-info").innerText = "❌ Error loading last location.";
+    navigator.geolocation.getCurrentPosition(async position => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const location = `${lat},${lon}`;
+      const nameInput = document.getElementById("name").value.trim();
+      const name = nameInput || "Anonymous";
+
+      const payload = {
+        tagId: "ZA-004",
+        location,
+        battery: "3.8V",
+        status: "active",
+        timestamp: new Date().toISOString(),
+        name,
+        photo: photoUrl // ✅ Now included correctly
+      };
+
+      await sendPayload(payload);
+    }, err => {
+      status.innerText = "❌ Location error: " + err.message;
+    });
+  }
+
+  async function sendPayload(payload) {
+    const status = document.getElementById("status");
+    status.innerText = "📡 Sending check-in…";
+
+    try {
+      const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
-  </script>
+      if (res.ok) {
+        status.innerText = "✅ Check-in successful!";
+        status.classList.remove("flash");
+      } else {
+        const text = await res.text();
+        status.innerText = `❌ Server error: ${text}`;
+      }
+    } catch (err) {
+      console.error("❌ Fetch error:", err);
+      status.innerText = "❌ Network error: " + err.message;
+    }
+  }
+</script>
+
 </body>
 </html>
