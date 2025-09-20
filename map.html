@@ -44,6 +44,7 @@
   <div id="map"></div>
   <div id="stats">📊 Loading journey stats…</div>
   <div id="slider">
+    <label for="timeline"><strong>CHECK-INS</strong></label><br>
     <input type="range" id="timeline" min="0" max="0" value="0" />
     <span id="slider-label">Step 0</span>
   </div>
@@ -85,7 +86,7 @@
 
         // Glowing route
         if (latlngs.length > 1) {
-          const glowingLine = L.polyline(latlngs, {
+          L.polyline(latlngs, {
             color: 'yellow',
             weight: 5,
             opacity: 0.7,
@@ -127,10 +128,10 @@
         const slider = document.getElementById("timeline");
         const label = document.getElementById("slider-label");
         slider.max = latlngs.length - 1;
+        slider.value = latlngs.length - 1; // Show latest check-in by default
 
         let replayMarker = null;
-        slider.addEventListener("input", () => {
-          const i = parseInt(slider.value);
+        const showStep = i => {
           label.innerText = `Step ${i + 1}`;
           const [lat, lon] = latlngs[i];
           if (replayMarker) map.removeLayer(replayMarker);
@@ -142,8 +143,15 @@
             })
           }).addTo(map);
           replayMarker.bindPopup(`<strong>${names[i]}</strong><br>Step ${i + 1}`).openPopup();
-          map.setView([lat, lon], 6);
+          map.setView([lat, lon], 14); // Zoom to ~1000m altitude
+        };
+
+        slider.addEventListener("input", () => {
+          showStep(parseInt(slider.value));
         });
+
+        // Show latest check-in on load
+        showStep(latlngs.length - 1);
       })
       .catch(err => {
         console.error("❌ Error loading map data:", err);
