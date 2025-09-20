@@ -1,176 +1,126 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>TagRace GPS Check-In</title>
+  <title>TagRace Check-In</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 2em;
-      background: url('tagrace-bg.png') no-repeat center center fixed;
-      background-size: cover;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #f0f0f0, #d0ffd0);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      color: #006633;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 2px #ccc;
+    }
+
+    input, select {
+      padding: 10px;
+      margin: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+      width: 250px;
+      max-width: 80%;
+      background-color: #222;
       color: white;
     }
-    input, button {
-      font-size: 1em;
-      padding: 0.6em 1em;
-      margin-top: 1em;
-      border: 2px solid white;
-      border-radius: 6px;
-      background-color: transparent;
+
+    #checkin-btn {
+      background: linear-gradient(to bottom, #00ff66, #009944);
       color: white;
+      font-size: 1.2em;
+      font-weight: bold;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 6px 0 #006633, 0 0 10px rgba(0,255,100,0.4);
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
+      margin-top: 20px;
+      animation: pulse 1.5s infinite;
     }
-    input[type="text"] {
-      width: 80%;
-      max-width: 300px;
-      color: white;
+
+    #checkin-btn:hover {
+      background: linear-gradient(to bottom, #00cc55, #007733);
+      box-shadow: 0 4px 0 #004422, 0 0 15px rgba(0,255,100,0.6);
+      transform: translateY(-2px);
     }
-    button:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-      box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+
+    #checkin-btn:active {
+      box-shadow: none;
+      transform: translateY(2px);
     }
-    button:active {
-      transform: scale(0.98);
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 10px rgba(0,255,100,0.4); }
+      50% { box-shadow: 0 0 20px rgba(0,255,100,0.8); }
+      100% { box-shadow: 0 0 10px rgba(0,255,100,0.4); }
     }
+
     #status {
-      margin-top: 1.5em;
+      margin-top: 20px;
       font-size: 1em;
-    }
-    #description {
-      font-size: 1em;
-      margin-bottom: 1.5em;
-      line-height: 1.5;
-      background: rgba(0,0,0,0.5);
-      padding: 1em;
-      border-radius: 8px;
-      display: inline-block;
-    }
-    #location-info {
-      margin-top: 1em;
-      font-size: 1em;
-      background: rgba(0,0,0,0.5);
-      padding: 1em;
-      border-radius: 8px;
-      display: inline-block;
-    }
-    @keyframes flashBolt {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.3; transform: scale(1.2); }
-    }
-    #status.flash {
-      animation: flashBolt 1s infinite;
+      color: #333;
     }
   </style>
 </head>
 <body>
-  <h1>TagRace GPS Check-In</h1>
+  <h1>🌍 TagRace Check-In</h1>
 
-  <p id="description">
-    🌍 This tag is part of <strong>TagRace</strong>—a global adventure tracking real-world movement.<br>
-    It's currently on a journey to <strong>Hope, British Columbia</strong>, carried by players, travelers, and dreamers.<br>
-    Every check-in helps trace its path across continents.<br><br>
-    🏁 <strong>Help this tag reach its final destination!</strong>
-  </p>
+  <input type="text" id="tagId" placeholder="Tag ID (e.g. ZA-004)" />
+  <input type="text" id="name" placeholder="Your Name" />
+  <input type="text" id="location" placeholder="Location (lat,lon)" />
+  <input type="text" id="battery" placeholder="Battery Level (e.g. 3.8V)" />
+  <select id="status">
+    <option value="active">Active</option>
+    <option value="resting">Resting</option>
+    <option value="charging">Charging</option>
+  </select>
 
-  <input type="text" id="name" placeholder="Your name (optional)">
-  <br>
+  <button id="checkin-btn">⚡ Check In</button>
 
-  <button onclick="getLocation()">⚡ Click to update the tag location!</button>
-  <div id="status" class="flash">⚡ Waiting for check-in…</div>
-
-  <a href="map.html" target="_blank">
-    <button>🗺️ View the Journey!</button>
-  </a>
-
-  <div id="location-info">📍 Loading last known location…</div>
-
-  <p style="margin-top: 2em; font-size: 0.9em; color: white; opacity: 0.8;">
-    📸 Follow <strong>#TagRaceZA</strong> on Instagram to see the global journey unfold.
-  </p>
+  <div id="status"></div>
 
   <script>
-    async function getLocation() {
-      if (!navigator.geolocation) {
-        document.getElementById("status").innerText = "❌ Geolocation not supported.";
-        return;
-      }
+    document.getElementById("checkin-btn").addEventListener("click", () => {
+      const tagId = document.getElementById("tagId").value;
+      const name = document.getElementById("name").value;
+      const location = document.getElementById("location").value;
+      const battery = document.getElementById("battery").value;
+      const status = document.getElementById("status").value;
 
-      navigator.geolocation.getCurrentPosition(async position => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        const location = `${lat},${lon}`;
-        const nameInput = document.getElementById("name").value.trim();
-        const name = nameInput || "Anonymous";
+      const payload = {
+        tagId,
+        name,
+        location,
+        battery,
+        status,
+        timestamp: new Date().toISOString()
+      };
 
-        await sendPayload({ tagId: "ZA-004", location, battery: "3.8V", status: "active", timestamp: new Date().toISOString(), name });
-      }, err => {
-        document.getElementById("status").innerText = "❌ Location error: " + err.message;
-      });
-    }
-
-    async function sendPayload(payload) {
-      const status = document.getElementById("status");
-      status.innerText = "📡 Sending check-in…";
-      try {
-        const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        if (res.ok) {
-          status.innerText = "✅ Check-in successful!";
-          status.classList.remove("flash");
-        } else {
-          const text = await res.text();
-          status.innerText = `❌ Server error: ${text}`;
-        }
-      } catch (err) {
-        console.error("❌ Fetch error:", err);
-        status.innerText = "❌ Network error: " + err.message;
-      }
-    }
-
-    async function reverseGeocode(lat, lon) {
-      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=67cfc38cc2264ec5bd420c63df393331`;
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        const town = data.features[0]?.properties?.city || data.features[0]?.properties?.town || "Unknown location";
-        return town;
-      } catch (err) {
-        console.error("❌ Reverse geocoding failed:", err);
-        return "Unknown location";
-      }
-    }
-
-    fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
-      .then(res => res.json())
-      .then(async data => {
-        const valid = data.filter(entry => entry.location && entry.location.includes(','));
-        const last = valid[valid.length - 1];
-        const finalDestination = "Hope, British Columbia (49.3794, -121.4414)";
-
-        if (last) {
-          const [lat, lon] = last.location.split(',').map(Number);
-          const town = await reverseGeocode(lat, lon);
-
-          document.getElementById("location-info").innerHTML = `
-            📍 <strong>Last Check-In:</strong> near ${town}<br>
-            🕒 <strong>Timestamp:</strong> ${last.timestamp}<br>
-            🏁 <strong>Final Destination:</strong> ${finalDestination}
-          `;
-        } else {
-          document.getElementById("location-info").innerText = "📍 No check-ins yet.";
-        }
+      fetch("https://tagrace-webhook.onrender.com/smarttag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.text())
+      .then(msg => {
+        document.getElementById("status").innerText = msg;
       })
       .catch(err => {
-        console.error("❌ Error loading last location:", err);
-        document.getElementById("location-info").innerText = "❌ Error loading last location.";
+        console.error("❌ Error:", err);
+        document.getElementById("status").innerText = "❌ Check-in failed.";
       });
+    });
   </script>
 </body>
 </html>

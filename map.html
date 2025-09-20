@@ -27,11 +27,26 @@
       z-index: 1000;
       box-shadow: 0 0 10px rgba(255,255,255,0.3);
     }
+    #slider {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: sans-serif;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
   <div id="stats">📊 Loading journey stats…</div>
+  <div id="slider">
+    <input type="range" id="timeline" min="0" max="0" value="0" />
+    <span id="slider-label">Step 0</span>
+  </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -42,10 +57,10 @@
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    const finalDestination = [49.3794, -121.4414]; // Hope, BC
+    const finalDestination = [49.3794, -121.4414]; // Hope, Canada
 
     function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371; // Earth radius in km
+      const R = 6371;
       const toRad = deg => deg * Math.PI / 180;
       const dLat = toRad(lat2 - lat1);
       const dLon = toRad(lon2 - lon1);
@@ -58,6 +73,7 @@
       .then(data => {
         const valid = data.filter(entry => entry.location && entry.location.includes(','));
         const latlngs = valid.map(entry => entry.location.split(',').map(Number));
+        const names = valid.map(entry => entry.name || "Anonymous");
 
         // Add markers
         valid.forEach((entry, i) => {
@@ -67,9 +83,14 @@
           marker.bindPopup(`<strong>${name}</strong><br>${entry.timestamp}`);
         });
 
-        // Draw route
+        // Glowing route
         if (latlngs.length > 1) {
-          L.polyline(latlngs, { color: 'yellow' }).addTo(map);
+          const glowingLine = L.polyline(latlngs, {
+            color: 'yellow',
+            weight: 5,
+            opacity: 0.7,
+            className: 'glow'
+          }).addTo(map);
         }
 
         // Final destination marker
@@ -81,7 +102,7 @@
             iconAnchor: [16, 32]
           })
         }).addTo(map);
-        finalMarker.bindPopup("<strong>🏁 Hope, British Columbia</strong>");
+        finalMarker.bindPopup("<strong>🏁 Hope, Canada</strong>");
 
         // Distance calculations
         let totalDistance = 0;
@@ -91,14 +112,38 @@
 
         const lastPoint = latlngs[latlngs.length - 1];
         const remainingDistance = haversine(...lastPoint, ...finalDestination);
+        const lastName = names[names.length - 1];
 
         // Update stats
         document.getElementById("stats").innerHTML = `
           🧭 <strong>Journey Stats</strong><br>
           📍 Check-ins: ${latlngs.length}<br>
           🛣️ Distance traveled: ${totalDistance.toFixed(1)} km<br>
-          🎯 Distance to goal: ${remainingDistance.toFixed(1)} km
+          🎯 Distance to goal: ${remainingDistance.toFixed(1)} km<br>
+          🧍‍♂️ Last traveler: ${lastName} 🇨🇦
         `;
+
+        // Timeline slider
+        const slider = document.getElementById("timeline");
+        const label = document.getElementById("slider-label");
+        slider.max = latlngs.length - 1;
+
+        let replayMarker = null;
+        slider.addEventListener("input", () => {
+          const i = parseInt(slider.value);
+          label.innerText = `Step ${i + 1}`;
+          const [lat, lon] = latlngs[i];
+          if (replayMarker) map.removeLayer(replayMarker);
+          replayMarker = L.marker([lat, lon], {
+            icon: L.icon({
+              iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+              iconSize: [32, 32],
+              iconAnchor: [16, 32]
+            })
+          }).addTo(map);
+          replayMarker.bindPopup(`<strong>${names[i]}</strong><br>Step ${i + 1}`).openPopup();
+          map.setView([lat, lon], 6);
+        });
       })
       .catch(err => {
         console.error("❌ Error loading map data:", err);
