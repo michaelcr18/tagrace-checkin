@@ -33,8 +33,6 @@
       background: rgba(255,255,255,0.9);
       padding: 10px;
     }
-
-    /* 📱 Mobile layout fix */
     @media (max-width: 600px) {
       #sidebar {
         top: auto;
@@ -100,7 +98,7 @@
 
     fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
       .then(res => res.json())
-      .then(data => {
+      .then(async data => {
         const valid = data.filter(e => e.location && e.location.includes(','));
         const latlngs = valid.map(e => e.location.split(',').map(Number));
         const names = valid.map(e => e.name || "Anonymous");
@@ -130,6 +128,8 @@
         const lastPoint = latlngs[lastIndex];
         const lastName = names[lastIndex];
         const remaining = haversine(...lastPoint, ...finalDestination);
+        const lastLocationText = await getLocationDetails(...lastPoint);
+        const lastFlag = lastLocationText.split(" ").pop();
 
         map.setView(lastPoint, 14);
         document.getElementById("stats").innerHTML = `
@@ -137,7 +137,7 @@
           📍 Check-ins: ${latlngs.length}<br>
           🛣️ Distance traveled: ${totalDistance.toFixed(1)} km<br>
           🎯 Distance to goal: ${remaining.toFixed(1)} km<br>
-          🧍‍♂️ Last traveler: ${lastName} 🇨🇦
+          🧍‍♂️ Last traveler: ${lastName} ${lastFlag}
         `;
 
         const slider = document.getElementById("timeline");
