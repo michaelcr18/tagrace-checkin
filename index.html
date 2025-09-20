@@ -23,7 +23,7 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-    input[type="text"] {
+    input[type="text"], input[type="file"] {
       width: 80%;
       max-width: 300px;
       color: white;
@@ -99,6 +99,8 @@
 
   <input type="text" id="name" placeholder="Your name (optional)">
   <br>
+  <input type="file" id="photo" accept="image/*" capture="environment">
+  <br>
 
   <button class="checkin-button" onclick="getLocation()">⚡ Click to update the tag location!</button>
   <div id="status" class="flash">⚡ Waiting for check-in…</div>
@@ -136,6 +138,32 @@
     async function sendPayload(payload) {
       const status = document.getElementById("status");
       status.innerText = "📡 Sending check-in…";
+
+      const photoInput = document.getElementById("photo");
+      const file = photoInput.files[0];
+
+      let photoUrl = null;
+
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("UPLOADCARE_STORE", "1");
+        formData.append("UPLOADCARE_PUB_KEY", "b6fd2347b271da80d239");
+
+        try {
+          const res = await fetch("https://upload.uploadcare.com/base/", {
+            method: "POST",
+            body: formData
+          });
+          const data = await res.json();
+          photoUrl = `https://ucarecdn.com/${data.file}/`;
+        } catch (err) {
+          console.error("❌ Photo upload failed:", err);
+        }
+      }
+
+      payload.photo = photoUrl;
+
       try {
         const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
           method: "POST",
