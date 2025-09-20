@@ -46,12 +46,12 @@
   <div id="slider">
     <label for="timeline"><strong>CHECK-INS</strong></label><br>
     <input type="range" id="timeline" min="0" max="0" value="0" />
-    <span id="slider-label">Step 0</span>
+    <span id="slider-label">Loading…</span>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([49.3794, -121.4414], 4);
+    const map = L.map('map');
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
@@ -111,9 +111,13 @@
           totalDistance += haversine(...latlngs[i - 1], ...latlngs[i]);
         }
 
-        const lastPoint = latlngs[latlngs.length - 1];
+        const lastIndex = latlngs.length - 1;
+        const lastPoint = latlngs[lastIndex];
+        const lastName = names[lastIndex];
         const remainingDistance = haversine(...lastPoint, ...finalDestination);
-        const lastName = names[names.length - 1];
+
+        // Set initial view to latest check-in
+        map.setView(lastPoint, 14);
 
         // Update stats
         document.getElementById("stats").innerHTML = `
@@ -127,12 +131,12 @@
         // Timeline slider
         const slider = document.getElementById("timeline");
         const label = document.getElementById("slider-label");
-        slider.max = latlngs.length - 1;
-        slider.value = latlngs.length - 1; // Show latest check-in by default
+        slider.max = lastIndex;
+        slider.value = lastIndex;
 
         let replayMarker = null;
         const showStep = i => {
-          label.innerText = `Step ${i + 1}`;
+          label.innerText = `Check-In: ${names[i]}`;
           const [lat, lon] = latlngs[i];
           if (replayMarker) map.removeLayer(replayMarker);
           replayMarker = L.marker([lat, lon], {
@@ -142,8 +146,8 @@
               iconAnchor: [16, 32]
             })
           }).addTo(map);
-          replayMarker.bindPopup(`<strong>${names[i]}</strong><br>Step ${i + 1}`).openPopup();
-          map.setView([lat, lon], 14); // Zoom to ~1000m altitude
+          replayMarker.bindPopup(`<strong>${names[i]}</strong><br>Check-In ${i + 1}`).openPopup();
+          map.setView([lat, lon], 14);
         };
 
         slider.addEventListener("input", () => {
@@ -151,7 +155,7 @@
         });
 
         // Show latest check-in on load
-        showStep(latlngs.length - 1);
+        showStep(lastIndex);
       })
       .catch(err => {
         console.error("❌ Error loading map data:", err);
