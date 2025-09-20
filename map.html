@@ -34,8 +34,10 @@
     }
     .checkin img {
       max-width: 100%;
+      max-height: 180px;
       border-radius: 6px;
       margin-top: 0.5em;
+      object-fit: cover;
     }
     a {
       color: #00ffcc;
@@ -160,7 +162,7 @@
             🕒 ${entry.timestamp}<br>
             📍 ${entry.town}<br>
             ${entry.countryCode ? `<img src="https://flagsapi.com/${entry.countryCode}/flat/32.png">` : ""}
-            ${entry.photo ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
+            ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
           `;
           L.marker([entry.lat, entry.lon]).addTo(map).bindPopup(popupContent);
 
@@ -171,7 +173,7 @@
               📍 ${entry.town}<br>
               ${entry.countryCode ? `<img src="https://flagsapi.com/${entry.countryCode}/flat/32.png">` : ""}
               🦛 Distance from previous: ${entry.distance} km<br>
-              ${entry.photo ? `<a href="${entry.photo}" target="_blank">📸 View Photo</a><br><img src="${entry.photo}">` : ""}
+              ${entry.photo && entry.photo.startsWith("http") ? `<a href="${entry.photo}" target="_blank">📸 View Photo</a><br><img src="${entry.photo}" alt="Uploaded photo">` : ""}
             </div>
           `;
         });
