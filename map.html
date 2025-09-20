@@ -5,53 +5,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-    }
-    #map {
-      height: 100%;
-      width: 100%;
-    }
-    #stats {
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { height: 100%; width: 100%; }
+    #stats, #sidebar, #slider {
       position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 1em;
-      border-radius: 8px;
+      z-index: 1000;
       font-family: sans-serif;
       font-size: 0.95em;
-      z-index: 1000;
-      box-shadow: 0 0 10px rgba(255,255,255,0.3);
-    }
-    #slider {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      background: rgba(255,255,255,0.9);
-      padding: 10px;
       border-radius: 8px;
-      font-family: sans-serif;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    #stats {
+      top: 10px; right: 10px;
+      background: rgba(0,0,0,0.7); color: white;
+      padding: 1em;
     }
     #sidebar {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 280px;
-      max-height: 90%;
+      top: 10px; left: 10px;
+      width: 280px; max-height: 90%;
       overflow-y: auto;
       background: rgba(255,255,255,0.95);
       padding: 1em;
-      border-radius: 8px;
-      font-family: sans-serif;
-      font-size: 0.9em;
-      z-index: 1000;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    #slider {
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+    }
+
+    /* 📱 Mobile layout fix */
+    @media (max-width: 600px) {
+      #sidebar {
+        top: auto;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-height: 40%;
+        overflow-y: auto;
+      }
+      #stats {
+        top: 10px;
+        right: 50%;
+        transform: translateX(50%);
+        width: 90%;
+        text-align: center;
+      }
     }
   </style>
 </head>
@@ -68,19 +68,15 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const map = L.map('map');
-
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '© OpenStreetMap'
+      maxZoom: 18, attribution: '© OpenStreetMap'
     }).addTo(map);
 
     const finalDestination = [49.3794, -121.4414]; // Hope, Canada
 
     function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371;
-      const toRad = deg => deg * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
+      const R = 6371, toRad = deg => deg * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
       const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
@@ -94,53 +90,36 @@
         const props = data.features[0]?.properties || {};
         const town = props.city || props.town || props.village || "Unknown";
         const country = props.country || "Unknown";
-        const countryCode = props.country_code || "";
-        const flag = getFlagEmoji(countryCode);
+        const code = props.country_code || "";
+        const flag = code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt(0)));
         return `${town}, ${country} ${flag}`;
       } catch {
         return "Unknown location 🌍";
       }
     }
 
-    function getFlagEmoji(countryCode) {
-      if (!countryCode) return "🌍";
-      return countryCode.toUpperCase().replace(/./g, char =>
-        String.fromCodePoint(127397 + char.charCodeAt(0))
-      );
-    }
-
     fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
       .then(res => res.json())
       .then(data => {
-        const valid = data.filter(entry => entry.location && entry.location.includes(','));
-        const latlngs = valid.map(entry => entry.location.split(',').map(Number));
-        const names = valid.map(entry => entry.name || "Anonymous");
+        const valid = data.filter(e => e.location && e.location.includes(','));
+        const latlngs = valid.map(e => e.location.split(',').map(Number));
+        const names = valid.map(e => e.name || "Anonymous");
 
-        valid.forEach((entry, i) => {
+        valid.forEach((e, i) => {
           const [lat, lon] = latlngs[i];
-          const name = entry.name || "Anonymous";
-          const marker = L.marker([lat, lon]).addTo(map);
-          marker.bindPopup(`<strong>${name}</strong><br>${entry.timestamp}`);
+          L.marker([lat, lon]).addTo(map).bindPopup(`<strong>${names[i]}</strong><br>${e.timestamp}`);
         });
 
         if (latlngs.length > 1) {
-          L.polyline(latlngs, {
-            color: 'yellow',
-            weight: 5,
-            opacity: 0.7,
-            className: 'glow'
-          }).addTo(map);
+          L.polyline(latlngs, { color: 'yellow', weight: 5, opacity: 0.7 }).addTo(map);
         }
 
-        const finalMarker = L.marker(finalDestination, {
-          title: "Final Destination",
+        L.marker(finalDestination, {
           icon: L.icon({
             iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-            iconSize: [32, 32],
-            iconAnchor: [16, 32]
+            iconSize: [32, 32], iconAnchor: [16, 32]
           })
-        }).addTo(map);
-        finalMarker.bindPopup("<strong>🏁 Hope, Canada</strong>");
+        }).addTo(map).bindPopup("<strong>🏁 Hope, Canada</strong>");
 
         let totalDistance = 0;
         for (let i = 1; i < latlngs.length; i++) {
@@ -150,15 +129,14 @@
         const lastIndex = latlngs.length - 1;
         const lastPoint = latlngs[lastIndex];
         const lastName = names[lastIndex];
-        const remainingDistance = haversine(...lastPoint, ...finalDestination);
+        const remaining = haversine(...lastPoint, ...finalDestination);
 
         map.setView(lastPoint, 14);
-
         document.getElementById("stats").innerHTML = `
           🧭 <strong>Journey Stats</strong><br>
           📍 Check-ins: ${latlngs.length}<br>
           🛣️ Distance traveled: ${totalDistance.toFixed(1)} km<br>
-          🎯 Distance to goal: ${remainingDistance.toFixed(1)} km<br>
+          🎯 Distance to goal: ${remaining.toFixed(1)} km<br>
           🧍‍♂️ Last traveler: ${lastName} 🇨🇦
         `;
 
@@ -175,25 +153,20 @@
           replayMarker = L.marker([lat, lon], {
             icon: L.icon({
               iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
-              iconSize: [32, 32],
-              iconAnchor: [16, 32]
+              iconSize: [32, 32], iconAnchor: [16, 32]
             })
           }).addTo(map);
           replayMarker.bindPopup(`<strong>${names[i]}</strong><br>Check-In ${i + 1}`).openPopup();
           map.setView([lat, lon], 14);
         };
 
-        slider.addEventListener("input", () => {
-          showStep(parseInt(slider.value));
-        });
-
+        slider.addEventListener("input", () => showStep(parseInt(slider.value)));
         showStep(lastIndex);
 
         (async () => {
           const sidebar = document.getElementById("sidebar");
           sidebar.innerHTML = "<strong>🧍‍♂️ Last 10 Check-Ins</strong><br><br>";
           let list = "";
-
           for (let i = Math.max(0, latlngs.length - 10); i < latlngs.length; i++) {
             const [lat, lon] = latlngs[i];
             const name = names[i];
@@ -201,7 +174,6 @@
             const legDistance = i > 0 ? haversine(...latlngs[i - 1], lat, lon).toFixed(1) : "—";
             list += `• <strong>${name}</strong><br>${locationText}<br>🛣️ ${legDistance} km<br><br>`;
           }
-
           sidebar.innerHTML += list;
         })();
       })
