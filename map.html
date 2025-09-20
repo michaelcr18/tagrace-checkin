@@ -45,7 +45,7 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      z-index: 1000;
+      z-index: 1001;
       background: rgba(0,0,0,0.5);
       padding: 6px;
       border-radius: 8px;
@@ -55,18 +55,33 @@
       height: auto;
       border-radius: 4px;
     }
+    @media (max-width: 768px) {
+      #sidebar {
+        position: absolute;
+        width: 100%;
+        height: 50%;
+        bottom: 0;
+        left: 0;
+        overflow-y: auto;
+        background: rgba(0,0,0,0.9);
+        z-index: 999;
+      }
+      #map {
+        height: 100%;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="sidebar">
-    <h2>🌍 TagRace Journey Summary</h2>
+    <h2>🦛 TagRace Journey Summary</h2>
     <div id="summary">Loading...</div>
     <h2>📍 Last 10 Check-Ins</h2>
     <div id="checkin-list">Loading...</div>
   </div>
   <div id="map">
     <div id="hippo-thumbnail">
-      <img src="https://raw.githubusercontent.com/michaelcr18/tagrace-checkin/main/hippo.PNG" alt="Hippo mascot">
+      <img src="https://michaelcr18.github.io/tagrace-checkin/hippo.PNG" alt="Hippo mascot">
     </div>
   </div>
 
@@ -155,7 +170,7 @@
               🕒 ${entry.timestamp}<br>
               📍 ${entry.town}<br>
               ${entry.countryCode ? `<img src="https://flagsapi.com/${entry.countryCode}/flat/32.png">` : ""}
-              🚶 Distance from previous: ${entry.distance} km<br>
+              🦛 Distance from previous: ${entry.distance} km<br>
               ${entry.photo ? `<a href="${entry.photo}" target="_blank">📸 View Photo</a><br><img src="${entry.photo}">` : ""}
             </div>
           `;
