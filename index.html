@@ -162,7 +162,7 @@
             body: formData
           });
           const data = await res.json();
-          photoUrl = `https://ucarecdn.com/${data.file}/`;
+          photoUrl = data.cdnUrl;
         } catch (err) {
           console.error("❌ Photo upload failed:", err);
         }
