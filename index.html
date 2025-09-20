@@ -4,123 +4,61 @@
   <title>TagRace Check-In</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom, #f0f0f0, #d0ffd0);
+    body, html {
       margin: 0;
       padding: 0;
+      height: 100%;
+      font-family: sans-serif;
+      background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+      background-size: cover;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      height: 100vh;
+      align-items: center;
     }
-
-    h1 {
-      color: #006633;
-      margin-bottom: 20px;
-      text-shadow: 1px 1px 2px #ccc;
-    }
-
-    input, select {
-      padding: 10px;
-      margin: 8px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 1em;
-      width: 250px;
-      max-width: 80%;
-      background-color: #222;
-      color: white;
-    }
-
-    #checkin-btn {
-      background: linear-gradient(to bottom, #00ff66, #009944);
-      color: white;
-      font-size: 1.2em;
-      font-weight: bold;
-      padding: 12px 24px;
-      border: none;
+    .container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 2em;
       border-radius: 12px;
-      box-shadow: 0 6px 0 #006633, 0 0 10px rgba(0,255,100,0.4);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      margin-top: 20px;
-      animation: pulse 1.5s infinite;
+      text-align: center;
+      color: white;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
     }
-
-    #checkin-btn:hover {
-      background: linear-gradient(to bottom, #00cc55, #007733);
-      box-shadow: 0 4px 0 #004422, 0 0 15px rgba(0,255,100,0.6);
-      transform: translateY(-2px);
-    }
-
-    #checkin-btn:active {
-      box-shadow: none;
-      transform: translateY(2px);
-    }
-
-    @keyframes pulse {
-      0% { box-shadow: 0 0 10px rgba(0,255,100,0.4); }
-      50% { box-shadow: 0 0 20px rgba(0,255,100,0.8); }
-      100% { box-shadow: 0 0 10px rgba(0,255,100,0.4); }
-    }
-
-    #status {
-      margin-top: 20px;
+    input[type="text"] {
+      padding: 10px;
+      margin: 10px 0;
+      width: 80%;
+      border: none;
+      border-radius: 6px;
       font-size: 1em;
-      color: #333;
+      background: white;
+      color: black;
+    }
+    .checkin-button {
+      background: #00cc66;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1.2em;
+      border-radius: 8px;
+      cursor: pointer;
+      animation: pulse 1.5s infinite;
+      box-shadow: 0 0 10px rgba(0,255,100,0.6);
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 10px rgba(0,255,100,0.6); }
+      50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(0,255,100,0.9); }
+      100% { transform: scale(1); box-shadow: 0 0 10px rgba(0,255,100,0.6); }
     }
   </style>
 </head>
 <body>
-  <h1>🌍 TagRace Check-In</h1>
-
-  <input type="text" id="tagId" placeholder="Tag ID (e.g. ZA-004)" />
-  <input type="text" id="name" placeholder="Your Name" />
-  <input type="text" id="location" placeholder="Location (lat,lon)" />
-  <input type="text" id="battery" placeholder="Battery Level (e.g. 3.8V)" />
-  <select id="status">
-    <option value="active">Active</option>
-    <option value="resting">Resting</option>
-    <option value="charging">Charging</option>
-  </select>
-
-  <button id="checkin-btn">⚡ Check In</button>
-
-  <div id="status"></div>
-
-  <script>
-    document.getElementById("checkin-btn").addEventListener("click", () => {
-      const tagId = document.getElementById("tagId").value;
-      const name = document.getElementById("name").value;
-      const location = document.getElementById("location").value;
-      const battery = document.getElementById("battery").value;
-      const status = document.getElementById("status").value;
-
-      const payload = {
-        tagId,
-        name,
-        location,
-        battery,
-        status,
-        timestamp: new Date().toISOString()
-      };
-
-      fetch("https://tagrace-webhook.onrender.com/smarttag", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.text())
-      .then(msg => {
-        document.getElementById("status").innerText = msg;
-      })
-      .catch(err => {
-        console.error("❌ Error:", err);
-        document.getElementById("status").innerText = "❌ Check-in failed.";
-      });
-    });
-  </script>
+  <div class="container">
+    <h1>🌍 TagRace Check-In</h1>
+    <form action="https://sheetdb.io/api/v1/fyyvku4q2tqb0" method="post">
+      <input type="text" name="data[name]" placeholder="Your name" required><br>
+      <input type="text" name="data[location]" placeholder="Latitude,Longitude" required><br>
+      <button type="submit" class="checkin-button">Check In</button>
+    </form>
+  </div>
 </body>
 </html>
