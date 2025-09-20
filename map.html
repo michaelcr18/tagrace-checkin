@@ -3,183 +3,174 @@
 <head>
   <title>TagRace Journey Map</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; }
-    #map { height: 100%; width: 100%; }
-    #stats, #sidebar, #slider {
-      position: absolute;
-      z-index: 1000;
+    body {
+      margin: 0;
       font-family: sans-serif;
-      font-size: 0.95em;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      display: flex;
+      height: 100vh;
     }
-    #stats {
-      top: 10px; right: 10px;
-      background: rgba(0,0,0,0.7); color: white;
-      padding: 1em;
+    #map {
+      flex: 1;
+      position: relative;
     }
     #sidebar {
-      top: 10px; left: 10px;
-      width: 280px; max-height: 90%;
+      width: 320px;
+      background: #111;
+      color: white;
       overflow-y: auto;
-      background: rgba(255,255,255,0.95);
       padding: 1em;
     }
-    #slider {
-      bottom: 20px; left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255,255,255,0.9);
-      padding: 10px;
+    h2 {
+      margin-top: 0;
+      font-size: 1.2em;
+      color: #00ff66;
     }
-    @media (max-width: 600px) {
-      #sidebar {
-        top: auto;
-        bottom: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
-        max-height: 40%;
-        overflow-y: auto;
-      }
-      #stats {
-        top: 10px;
-        right: 50%;
-        transform: translateX(50%);
-        width: 90%;
-        text-align: center;
-      }
+    .checkin {
+      margin-bottom: 1em;
+      border-bottom: 1px solid #333;
+      padding-bottom: 1em;
+    }
+    .checkin img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin-top: 0.5em;
+    }
+    a {
+      color: #00ffcc;
+      text-decoration: underline;
+    }
+    #hippo-thumbnail {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: rgba(0,0,0,0.5);
+      padding: 6px;
+      border-radius: 8px;
+    }
+    #hippo-thumbnail img {
+      width: 60px;
+      height: auto;
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
-  <div id="map"></div>
-  <div id="stats">📊 Loading journey stats…</div>
-  <div id="slider">
-    <label for="timeline"><strong>CHECK-INS</strong></label><br>
-    <input type="range" id="timeline" min="0" max="0" value="0" />
-    <span id="slider-label">Loading…</span>
+  <div id="sidebar">
+    <h2>🌍 TagRace Journey Summary</h2>
+    <div id="summary">Loading...</div>
+    <h2>📍 Last 10 Check-Ins</h2>
+    <div id="checkin-list">Loading...</div>
   </div>
-  <div id="sidebar">📋 Loading recent check-ins…</div>
+  <div id="map">
+    <div id="hippo-thumbnail">
+      <img src="https://raw.githubusercontent.com/michaelcr18/tagrace-checkin/main/hippo.PNG" alt="Hippo mascot">
+    </div>
+  </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map');
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18, attribution: '© OpenStreetMap'
+    const map = L.map('map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    const finalDestination = [49.3794, -121.4414]; // Hope, Canada
-
     function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371, toRad = deg => deg * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+      const R = 6371;
+      const toRad = deg => deg * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
       const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    async function getLocationDetails(lat, lon) {
-      const apiKey = "67cfc38cc2264ec5bd420c63df393331";
-      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=${apiKey}`;
+    async function getTownAndCountry(lat, lon) {
+      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=67cfc38cc2264ec5bd420c63df393331`;
       try {
         const res = await fetch(url);
         const data = await res.json();
         const props = data.features[0]?.properties || {};
-        const town = props.city || props.town || props.village || "Unknown";
-        const country = props.country || "Unknown";
-        const code = props.country_code || "";
-        const flag = code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt(0)));
-        return `${town}, ${country} ${flag}`;
+        return {
+          town: props.city || props.town || props.village || "Unknown",
+          countryCode: props.country_code?.toUpperCase() || "UN"
+        };
       } catch {
-        return "Unknown location 🌍";
+        return { town: "Unknown", countryCode: "UN" };
       }
     }
 
     fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
       .then(res => res.json())
       .then(async data => {
-        const valid = data.filter(e => e.location && e.location.includes(','));
-        const latlngs = valid.map(e => e.location.split(',').map(Number));
-        const names = valid.map(e => e.name || "Anonymous");
-
-        valid.forEach((e, i) => {
-          const [lat, lon] = latlngs[i];
-          L.marker([lat, lon]).addTo(map).bindPopup(`<strong>${names[i]}</strong><br>${e.timestamp}`);
-        });
-
-        if (latlngs.length > 1) {
-          L.polyline(latlngs, { color: 'yellow', weight: 5, opacity: 0.7 }).addTo(map);
-        }
-
-        L.marker(finalDestination, {
-          icon: L.icon({
-            iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-            iconSize: [32, 32], iconAnchor: [16, 32]
-          })
-        }).addTo(map).bindPopup("<strong>🏁 Hope, Canada</strong>");
+        const valid = data.filter(entry => entry.location && entry.location.includes(','));
+        const recent = valid.slice(-10).reverse();
+        const firstDate = new Date(valid[0]?.timestamp);
+        const today = new Date();
+        const totalDays = Math.ceil((today - firstDate) / (1000 * 60 * 60 * 24));
 
         let totalDistance = 0;
-        for (let i = 1; i < latlngs.length; i++) {
-          totalDistance += haversine(...latlngs[i - 1], ...latlngs[i]);
-        }
+        let previous = null;
+        const points = [];
 
-        const lastIndex = latlngs.length - 1;
-        const lastPoint = latlngs[lastIndex];
-        const lastName = names[lastIndex];
-        const remaining = haversine(...lastPoint, ...finalDestination);
-        const lastLocationText = await getLocationDetails(...lastPoint);
-        const lastFlag = lastLocationText.split(" ").pop();
+        const enriched = await Promise.all(recent.map(async entry => {
+          const [lat, lon] = entry.location.split(',').map(Number);
+          const geo = await getTownAndCountry(lat, lon);
+          const distance = previous ? haversine(previous.lat, previous.lon, lat, lon) : 0;
+          totalDistance += distance;
+          previous = { lat, lon };
+          points.push([lat, lon]);
 
-        map.setView(lastPoint, 14);
-        document.getElementById("stats").innerHTML = `
-          🧭 <strong>Journey Stats</strong><br>
-          📍 Check-ins: ${latlngs.length}<br>
-          🛣️ Distance traveled: ${totalDistance.toFixed(1)} km<br>
-          🎯 Distance to goal: ${remaining.toFixed(1)} km<br>
-          🧍‍♂️ Last traveler: ${lastName} ${lastFlag}
+          return {
+            ...entry,
+            lat, lon,
+            town: geo.town,
+            countryCode: geo.countryCode,
+            distance: distance.toFixed(1)
+          };
+        }));
+
+        document.getElementById("summary").innerHTML = `
+          <p>🛣️ <strong>Total Distance:</strong> ${totalDistance.toFixed(1)} km</p>
+          <p>📅 <strong>Days Traveled:</strong> ${totalDays} days</p>
         `;
 
-        const slider = document.getElementById("timeline");
-        const label = document.getElementById("slider-label");
-        slider.max = lastIndex;
-        slider.value = lastIndex;
+        const list = document.getElementById("checkin-list");
+        list.innerHTML = "";
 
-        let replayMarker = null;
-        const showStep = i => {
-          label.innerText = `Check-In: ${names[i]}`;
-          const [lat, lon] = latlngs[i];
-          if (replayMarker) map.removeLayer(replayMarker);
-          replayMarker = L.marker([lat, lon], {
-            icon: L.icon({
-              iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
-              iconSize: [32, 32], iconAnchor: [16, 32]
-            })
-          }).addTo(map);
-          replayMarker.bindPopup(`<strong>${names[i]}</strong><br>Check-In ${i + 1}`).openPopup();
-          map.setView([lat, lon], 14);
-        };
+        enriched.forEach(entry => {
+          const popupContent = `
+            <strong>${entry.name || "Anonymous"}</strong><br>
+            🕒 ${entry.timestamp}<br>
+            📍 ${entry.town}<br>
+            ${entry.countryCode ? `<img src="https://flagsapi.com/${entry.countryCode}/flat/32.png">` : ""}
+            ${entry.photo ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
+          `;
+          L.marker([entry.lat, entry.lon]).addTo(map).bindPopup(popupContent);
 
-        slider.addEventListener("input", () => showStep(parseInt(slider.value)));
-        showStep(lastIndex);
+          list.innerHTML += `
+            <div class="checkin">
+              <strong>${entry.name || "Anonymous"}</strong><br>
+              🕒 ${entry.timestamp}<br>
+              📍 ${entry.town}<br>
+              ${entry.countryCode ? `<img src="https://flagsapi.com/${entry.countryCode}/flat/32.png">` : ""}
+              🚶 Distance from previous: ${entry.distance} km<br>
+              ${entry.photo ? `<a href="${entry.photo}" target="_blank">📸 View Photo</a><br><img src="${entry.photo}">` : ""}
+            </div>
+          `;
+        });
 
-        (async () => {
-          const sidebar = document.getElementById("sidebar");
-          sidebar.innerHTML = "<strong>🧍‍♂️ Last 10 Check-Ins</strong><br><br>";
-          let list = "";
-          for (let i = Math.max(0, latlngs.length - 10); i < latlngs.length; i++) {
-            const [lat, lon] = latlngs[i];
-            const name = names[i];
-            const locationText = await getLocationDetails(lat, lon);
-            const legDistance = i > 0 ? haversine(...latlngs[i - 1], lat, lon).toFixed(1) : "—";
-            list += `• <strong>${name}</strong><br>${locationText}<br>🛣️ ${legDistance} km<br><br>`;
-          }
-          sidebar.innerHTML += list;
-        })();
+        if (points.length > 1) {
+          L.polyline(points, { color: '#00ff66', weight: 4 }).addTo(map);
+          map.fitBounds(L.polyline(points).getBounds());
+        } else if (points.length === 1) {
+          map.setView(points[0], 5);
+        }
       })
       .catch(err => {
-        console.error("❌ Error loading map data:", err);
-        document.getElementById("stats").innerText = "❌ Error loading stats.";
+        console.error("❌ Error loading check-ins:", err);
+        document.getElementById("checkin-list").innerText = "❌ Failed to load check-ins.";
       });
   </script>
 </body>
