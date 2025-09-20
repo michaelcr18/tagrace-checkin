@@ -27,6 +27,7 @@
       width: 80%;
       max-width: 300px;
       color: white;
+      background-color: rgba(255,255,255,0.1);
     }
     button:hover {
       background-color: rgba(255, 255, 255, 0.1);
@@ -64,6 +65,24 @@
     #status.flash {
       animation: flashBolt 1s infinite;
     }
+
+    /* ⚡ Glowing green button */
+    .checkin-button {
+      background-color: #00ff66;
+      color: black;
+      border: none;
+      padding: 0.8em 1.5em;
+      font-size: 1.1em;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(0,255,100,0.8);
+      animation: glowPulse 1.5s infinite;
+    }
+    @keyframes glowPulse {
+      0% { box-shadow: 0 0 10px rgba(0,255,100,0.6); transform: scale(1); }
+      50% { box-shadow: 0 0 25px rgba(0,255,100,1); transform: scale(1.05); }
+      100% { box-shadow: 0 0 10px rgba(0,255,100,0.6); transform: scale(1); }
+    }
   </style>
 </head>
 <body>
@@ -79,7 +98,7 @@
   <input type="text" id="name" placeholder="Your name (optional)">
   <br>
 
-  <button onclick="getLocation()">⚡ Click to update the tag location!</button>
+  <button class="checkin-button" onclick="getLocation()">⚡ Click to update the tag location!</button>
   <div id="status" class="flash">⚡ Waiting for check-in…</div>
 
   <a href="map.html" target="_blank">
