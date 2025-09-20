@@ -12,7 +12,7 @@
       background-size: cover;
       color: white;
     }
-    input, button {
+    input, button, label {
       font-size: 1em;
       padding: 0.6em 1em;
       margin-top: 1em;
@@ -23,7 +23,7 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-    input[type="text"], input[type="file"] {
+    input[type="text"] {
       width: 80%;
       max-width: 300px;
       color: white;
@@ -33,10 +33,15 @@
       color: white;
       opacity: 1;
     }
+    input[type="file"] {
+      display: none;
+    }
+    label.custom-file-button:hover,
     button:hover {
       background-color: rgba(255, 255, 255, 0.1);
       box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
     }
+    label.custom-file-button:active,
     button:active {
       transform: scale(0.98);
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
@@ -91,22 +96,23 @@
   <h1>TagRace GPS Check-In</h1>
 
   <p id="description">
-    🌍 This tag is part of <strong>TagRace</strong>—a global adventure tracking real-world movement.<br>
-    It's currently on a journey to <strong>Hope, British Columbia</strong>, carried by players, travelers, and dreamers.<br>
-    Every check-in helps trace its path across continents.<br><br>
-    🏁 <strong>Help this tag reach its final destination!</strong>
+    🌍 Suzie the Hippo is part of <strong>TagRace</strong>—a global adventure tracking real-world movement.<br>
+    She is currently on a journey to <strong>Hope, Canada</strong>, carried by players, travelers, and dreamers.<br>
+    You are now part of the journey! Every check-in helps trace her path across continents.<br><br>
+    🏁 <strong>Help her reach her final destination!</strong>
   </p>
 
   <input type="text" id="name" placeholder="Your name (optional)">
   <br>
+  <label for="photo" class="custom-file-button">📸 Add Photo</label>
   <input type="file" id="photo" accept="image/*" capture="environment">
   <br>
 
-  <button class="checkin-button" onclick="getLocation()">⚡ Click to update the tag location!</button>
+  <button class="checkin-button" onclick="getLocation()">⚡ Click to update Suzie's location!</button>
   <div id="status" class="flash">⚡ Waiting for check-in…</div>
 
   <a href="map.html" target="_blank">
-    <button>🗺️ View the Journey!</button>
+    <button>🗺️ View her Journey!</button>
   </a>
 
   <div id="location-info">📍 Loading last known location…</div>
