@@ -4,7 +4,7 @@
   <title>TagRace GPS Check-In</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* [CSS styles unchanged — preserved from your latest working version] */
+    /* [CSS styles omitted for brevity — same as previous version] */
   </style>
 </head>
 <body>
@@ -17,11 +17,11 @@
     🏁 <strong>Help her reach her final destination!</strong>
   </p>
 
-  <input type="text" id="name" placeholder="Your name (optional)">
-  <br>
-  <label for="photo" class="custom-file-button">📸 Add Photo</label>
-  <input type="file" id="photo" accept="image/*" capture="environment">
-  <br>
+  <div class="input-group">
+    <input type="text" id="name" placeholder="Your name (optional)">
+    <label for="photo" class="custom-file-button">📸 Add Photo</label>
+    <input type="file" id="photo" accept="image/*" capture="environment">
+  </div>
 
   <button class="checkin-button" onclick="getLocation()">⚡ Click to update Suzie's location!</button>
   <div id="status" class="flash">⚡ Waiting for check-in…</div>
@@ -134,7 +134,7 @@
       .then(res => res.json())
       .then(async data => {
         const valid = data.filter(entry => entry.location && entry.location.includes(','));
-        const last = valid.slice(-1)[0]; // ✅ More reliable than valid[valid.length - 1]
+        const last = valid.slice(-1)[0];
         const finalDestination = "Hope, British Columbia (49.3794, -121.4414)";
 
         if (last) {
@@ -147,7 +147,6 @@
             🏁 <strong>Final Destination:</strong> ${finalDestination}
           `;
         } else {
-          console.warn("⚠️ No valid check-ins found.");
           document.getElementById("location-info").innerText = "📍 No check-ins yet.";
         }
       })
