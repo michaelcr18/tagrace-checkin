@@ -5,14 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body {
+    html, body {
+      height: 100%;
       margin: 0;
+      overflow: hidden;
+    }
+    body {
       font-family: sans-serif;
       display: flex;
-      height: 100vh;
     }
     #map {
       flex: 1;
+      height: 100vh;
       position: relative;
     }
     #sidebar {
@@ -211,12 +215,11 @@
               ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
               🛣️ Distance from previous: ${distance.toFixed(1)} km<br>
               ${entry.photo && entry.photo.startsWith("http")
-                                ? `<a href="${entry.photo}" target="_blank">📸 View Photo</a><br><img src="${entry.photo}" alt="Uploaded photo">`
-                : ""
-              }
+                ? `<a href="${entry.photo}" target="_blank">📸 View Photo</a><br><img src="${entry.photo}" alt="Uploaded photo">`
+                : ""}
             </div>
           `;
-        });
+        }));
 
         if (hippoPath.length > 1) {
           hippoPolyline = L.polyline(hippoPath, { color: hippoColor, weight: 4 }).addTo(map);
