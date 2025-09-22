@@ -169,6 +169,17 @@
         const location = `${lat},${lon}`;
         const nameInput = document.getElementById("name").value.trim();
         const name = nameInput || "Anonymous";
+        const tagId = document.getElementById("tagId").value;
+
+        const payload = {
+          tagId,
+          location,
+          battery: "3.8V",
+          status: "active",
+          timestamp: new Date().toISOString(),
+          name,
+          photo: photoUrl
+        };
 
         const payload = {
           tagId: "ZA-004",
