@@ -12,7 +12,7 @@
       background-size: cover;
       color: white;
     }
-    input, button, label {
+    input, button, label, select {
       font-size: 1em;
       padding: 0.6em 1em;
       margin-top: 1em;
@@ -22,6 +22,11 @@
       color: white;
       cursor: pointer;
       transition: all 0.3s ease;
+    }
+    select {
+      width: 80%;
+      max-width: 300px;
+      background-color: rgba(255,255,255,0.1);
     }
     input[type="text"] {
       width: 80%;
@@ -96,25 +101,25 @@
   <h1>TagRace GPS Check-In</h1>
 
   <p id="description">
-    🌍 This character is part of <strong>TagRace</strong>—a global adventure tracking real-world movement.<br>
+    🌍 Suzie the Hippo is part of <strong>TagRace</strong>—a global adventure tracking real-world movement.<br>
     She is currently on a journey to <strong>Hope, Canada</strong>, carried by players, travelers, and dreamers.<br>
     You are now part of the journey! Every check-in helps trace her path across continents. After moving her along, leave her in a safe space for the next person to find.<br><br>
     🏁 <strong>Help her reach her final destination!</strong>
   </p>
 
-    <select id="tagId">
+  <select id="tagId">
     <option value="ZA-004">Suzie the Hippo</option>
     <option value="ZA-005">Percy the Penguin</option>
   </select>
   <br>
-  
+
   <input type="text" id="name" placeholder="Your name (optional)">
   <br>
   <label for="photo" class="custom-file-button">📸 Add Photo</label>
   <input type="file" id="photo" accept="image/*" capture="environment">
   <br>
 
-  <button class="checkin-button" onclick="getLocation()">⚡ Click to update her location!</button>
+  <button class="checkin-button" onclick="getLocation()">⚡ Click to update Suzie's location!</button>
   <div id="status" class="flash">⚡ Waiting for check-in…</div>
 
   <a href="map.html" target="_blank">
@@ -128,91 +133,92 @@
   </p>
 
   <script>
-  async function getLocation() {
-    const status = document.getElementById("status");
-    status.innerText = "📡 Uploading photo…";
-    status.classList.add("flash");
+    async function getLocation() {
+      const status = document.getElementById("status");
+      status.innerText = "📡 Uploading photo…";
+      status.classList.add("flash");
 
-    const photoInput = document.getElementById("photo");
-    const file = photoInput.files[0];
-    let photoUrl = "";
+      const photoInput = document.getElementById("photo");
+      const file = photoInput.files[0];
+      let photoUrl = "";
 
-    if (file) {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("UPLOADCARE_STORE", "1");
-      formData.append("UPLOADCARE_PUB_KEY", "b6fd2347b271da80d239");
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("UPLOADCARE_STORE", "1");
+        formData.append("UPLOADCARE_PUB_KEY", "b6fd2347b271da80d239");
+
+        try {
+          const res = await fetch("https://upload.uploadcare.com/base/", {
+            method: "POST",
+            body: formData
+          });
+          const data = await res.json();
+          photoUrl = data.cdnUrl || "";
+        } catch (err) {
+          console.error("❌ Photo upload failed:", err);
+        }
+      }
+
+      status.innerText = "📡 Getting location…";
+
+      if (!navigator.geolocation) {
+        status.innerText = "❌ Geolocation not supported.";
+        status.classList.remove("flash");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(async position => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const location = `${lat},${lon}`;
+        const nameInput = document.getElementById("name").value.trim();
+        const name = nameInput || "Anonymous";
+        const tagId = document.getElementById("tagId")?.value || "ZA-004";
+
+        const payload = {
+          tagId,
+          location,
+          battery: "3.8V",
+          status: "active",
+          timestamp: new Date().toISOString(),
+          name,
+          photo: photoUrl
+        };
+
+        console.log("📦 Final payload:", payload);
+        await sendPayload(payload);
+      }, err => {
+        status.innerText = "❌ Location error: " + err.message;
+        status.classList.remove("flash");
+      });
+    }
+
+    async function sendPayload(payload) {
+      const status = document.getElementById("status");
+      status.innerText = "📡 Sending check-in…";
+      status.classList.add("flash");
 
       try {
-        const res = await fetch("https://upload.uploadcare.com/base/", {
+        const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
           method: "POST",
-          body: formData
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: payload })
         });
-        const data = await res.json();
-        photoUrl = data.cdnUrl || "";
+        if (res.ok) {
+          status.innerText = "✅ Check-in successful!";
+          status.classList.remove("flash");
+        } else {
+          const text = await res.text();
+          status.innerText = `❌ Server error: ${text}`;
+          status.classList.remove("flash");
+        }
       } catch (err) {
-        console.error("❌ Photo upload failed:", err);
-      }
-    }
-
-    status.innerText = "📡 Getting location…";
-
-    if (!navigator.geolocation) {
-      status.innerText = "❌ Geolocation not supported.";
-      status.classList.remove("flash");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(async position => {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      const location = `${lat},${lon}`;
-      const nameInput = document.getElementById("name").value.trim();
-      const name = nameInput || "Anonymous";
-      const tagId = document.getElementById("tagId")?.value || "ZA-004";
-
-      const payload = {
-        tagId,
-        location,
-        battery: "3.8V",
-        status: "active",
-        timestamp: new Date().toISOString(),
-        name,
-        photo: photoUrl
-      };
-
-      console.log("📦 Final payload:", payload);
-      await sendPayload(payload);
-    }, err => {
-      status.innerText = "❌ Location error: " + err.message;
-      status.classList.remove("flash");
-    });
-  }
-
-  async function sendPayload(payload) {
-    const status = document.getElementById("status");
-    status.innerText = "📡 Sending check-in…";
-    status.classList.add("flash");
-
-    try {
-      const res = await fetch("https://tagrace-webhook.onrender.com/smarttag", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: payload }) // ✅ SheetDB expects this format
-      });
-      if (res.ok) {
-        status.innerText = "✅ Check-in successful!";
-        status.classList.remove("flash");
-      } else {
-        const text = await res.text();
-        status.innerText = `❌ Server error: ${text}`;
+        console.error("❌ Fetch error:", err);
+        status.innerText = "❌ Network error: " + err.message;
         status.classList.remove("flash");
       }
-    } catch (err) {
-      console.error("❌ Fetch error:", err);
-      status.innerText = "❌ Network error: " + err.message;
-      status.classList.remove("flash");
     }
-  }
+  </script>
 </body>
 </html>
