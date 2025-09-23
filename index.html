@@ -248,7 +248,33 @@ if (data.file) {
         status.classList.remove("flash");
       }
     }
+   async function loadLastLocation(tagId) {
+      const info = document.getElementById("location-info");
+      info.innerText = "📍 Loading last known location…";
+
+      try {
+        const res = await fetch(`https://sheetdb.io/api/v1/fyyvku4q2tqb0/search?tagId=${tagId}`);
+        const data = await res.json();
+        if (data.length > 0) {
+          const last = data[data.length - 1];
+          info.innerText = `📍 Last check-in: ${last.location} by ${last.name || "Anonymous"}`;
+        } else {
+          info.innerText = "📍 No check-ins yet for this tag.";
+        }
+      } catch (err) {
+        info.innerText = "❌ Failed to load location.";
+        console.error("Location fetch error:", err);
+      }
+    } 
+     document.getElementById("tagId").addEventListener("change", function() {
+      loadLastLocation(this.value);
+    });
+
+    window.addEventListener("load", () => {
+      const tagId = document.getElementById("tagId").value;
+      loadLastLocation(tagId);
+    });
   </script>
-  <p id="version-tag">🔧 Code Version: v1.5 — 2025-09-23</p>
+  <p id="version-tag">🔧 Code Version: v1.6 — 2025-09-23</p>
 </body>
 </html>
