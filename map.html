@@ -212,8 +212,10 @@
       list.innerHTML = "";
 
       await Promise.all(recent.map(async entry => {
-        const [lat, lon] = entry.location.split(',').map(Number);
-        const geo = await getTownAndCountry(lat, lon);
+  const [lat, lon] = entry.location.split(',').map(Number);
+  const geo = await getTownAndCountry(lat, lon);
+  entry.countryName = geo.countryName; // ✅ Add this line
+
         const distance = previous ? haversine(previous.lat, previous.lon, lat, lon) : 0;
         totalDistance += distance;
         previous = { lat, lon };
@@ -295,34 +297,32 @@
   .then(res => res.json())
   .then(worldData => {
     const visitedCountries = new Set(
-  recent.map(e => e.countryName?.toLowerCase()).filter(Boolean)
-);
-console.log("✅ Visited countries:", Array.from(visitedCountries));
-
+      recent.map(e => e.countryName?.toLowerCase()).filter(Boolean)
+    );
     console.log("✅ Visited countries:", Array.from(visitedCountries));
 
     L.geoJSON(worldData, {
       style: feature => {
-  const name = feature.properties.name?.toLowerCase();
-  console.log("🌍 GeoJSON country name:", name);
+        const name = feature.properties.name?.toLowerCase();
+        console.log("🌍 GeoJSON country name:", name);
 
-  if (visitedCountries.has(name)) {
-    console.log("✅ MATCHED:", name);
-  } else {
-    console.log("❌ NOT MATCHED:", name);
-  }
+        if (visitedCountries.has(name)) {
+          console.log("✅ MATCHED:", name);
+        } else {
+          console.log("❌ NOT MATCHED:", name);
+        }
 
-  const visited = name && visitedCountries.has(name);
-  return {
-    fillColor: visited ? '#222' : '#000',
-    fillOpacity: visited ? 0.1 : 0.6,
-    color: visited ? '#00ff66' : '#444',
-    weight: visited ? 1 : 0.5
-  };
-}
-
+        const visited = name && visitedCountries.has(name);
+        return {
+          fillColor: visited ? '#222' : '#000',
+          fillOpacity: visited ? 0.1 : 0.6,
+          color: visited ? '#00ff66' : '#444',
+          weight: visited ? 1 : 0.5
+        };
+      }
     }).addTo(map);
   });
+
 
     })
     .catch(err => {
@@ -332,7 +332,7 @@ console.log("✅ Visited countries:", Array.from(visitedCountries));
 </script>
   
 <div style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #888; z-index: 1003;">
-  TagRace Map v1.12 — 2025-09-23
+  TagRace Map v1.13 — 2025-09-23
 </div>
 
 </body>
