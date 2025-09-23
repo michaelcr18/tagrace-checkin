@@ -121,173 +121,204 @@
   </div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    const hippoIcon = L.icon({
-      iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/hippo.jpg',
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-      popupAnchor: [0, -40]
-    });
+  const hippoIcon = L.icon({
+    iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/hippo.jpg',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40]
+  });
 
-    const penguinIcon = L.icon({
-      iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/penguin.jpg',
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-      popupAnchor: [0, -40]
-    });
+  const penguinIcon = L.icon({
+    iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/penguin.jpg',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40]
+  });
 
-    const map = L.map('map').setView([0, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+  const map = L.map('map').setView([0, 0], 2);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
 
-    const hippoColor = '#00ff66';
-    const penguinColor = '#3399ff';
+  const hippoColor = '#00ff66';
+  const penguinColor = '#3399ff';
 
-    const hippoMarkers = [];
-    const penguinMarkers = [];
-    const hippoPath = [];
-    const penguinPath = [];
+  const hippoMarkers = [];
+  const penguinMarkers = [];
+  const hippoPath = [];
+  const penguinPath = [];
 
-    let hippoPolyline, penguinPolyline;
+  let hippoPolyline, penguinPolyline;
 
-    function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371;
-      const toRad = deg => deg * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const toRad = deg => deg * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  async function getTownAndCountry(lat, lon) {
+    const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=67cfc38cc2264ec5bd420c63df393331`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      const props = data.features[0]?.properties || {};
+      return {
+        town: props.city || props.town || props.village || "Unknown",
+        countryCode: props.country_code?.toUpperCase() || "UN"
+      };
+    } catch {
+      return { town: "Unknown", countryCode: "UN" };
     }
+  }
 
-    async function getTownAndCountry(lat, lon) {
-      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=67cfc38cc2264ec5bd420c63df393331`;
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        const props = data.features[0]?.properties || {};
-        return {
-          town: props.city || props.town || props.village || "Unknown",
-          countryCode: props.country_code?.toUpperCase() || "UN"
-        };
-      } catch {
-        return { town: "Unknown", countryCode: "UN" };
-      }
+  function toggleTag(tag, show) {
+    const markers = tag === 'hippo' ? hippoMarkers : penguinMarkers;
+    const polyline = tag === 'hippo' ? hippoPolyline : penguinPolyline;
+
+    if (show) {
+      markers.forEach(m => m.addTo(map));
+      polyline.addTo(map);
+    } else {
+      markers.forEach(m => map.removeLayer(m));
+      map.removeLayer(polyline);
     }
+  }
 
-    function toggleTag(tag, show) {
-      const markers = tag === 'hippo' ? hippoMarkers : penguinMarkers;
-      const polyline = tag === 'hippo' ? hippoPolyline : penguinPolyline;
+  fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
+    .then(res => res.json())
+    .then(async data => {
+      const valid = data.filter(entry => entry.location && entry.location.includes(','));
+      const hippoData = valid.filter(e => e.tagId === "ZA-004");
+      const penguinData = valid.filter(e => e.tagId === "ZA-005");
 
-      if (show) {
-        markers.forEach(m => m.addTo(map));
-        polyline.addTo(map);
-      } else {
-        markers.forEach(m => map.removeLayer(m));
-        map.removeLayer(polyline);
-      }
-    }
+      const recent = [...hippoData, ...penguinData].slice(-10).reverse();
+      const firstDate = new Date(valid[0]?.timestamp);
+      const today = new Date();
+      const totalDays = Math.ceil((today - firstDate) / (1000 * 60 * 60 * 24));
 
-    fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
-      .then(res => res.json())
-      .then(async data => {
-        const valid = data.filter(entry => entry.location && entry.location.includes(','));
-        const hippoData = valid.filter(e => e.tagId === "ZA-004");
-        const penguinData = valid.filter(e => e.tagId === "ZA-005");
+      let totalDistance = 0;
+      let previous = null;
 
-        const recent = [...hippoData, ...penguinData].slice(-10).reverse();
-        const firstDate = new Date(valid[0]?.timestamp);
-        const today = new Date();
-        const totalDays = Math.ceil((today - firstDate) / (1000 * 60 * 60 * 24));
+      const list = document.getElementById("checkin-list");
+      list.innerHTML = "";
 
-        let totalDistance = 0;
-        let previous = null;
+      await Promise.all(recent.map(async entry => {
+        const [lat, lon] = entry.location.split(',').map(Number);
+        const geo = await getTownAndCountry(lat, lon);
+        const distance = previous ? haversine(previous.lat, previous.lon, lat, lon) : 0;
+        totalDistance += distance;
+        previous = { lat, lon };
 
-        const list = document.getElementById("checkin-list");
-        list.innerHTML = "";
+        const tagEmoji = entry.tagId === "ZA-004" ? "🦛" : "🐧";
+        const icon = entry.tagId === "ZA-004" ? hippoIcon : penguinIcon;
+        const marker = L.marker([lat, lon], { icon }).bindPopup(`
+          <strong>${entry.name || "Anonymous"}</strong><br>
+          🕒 ${entry.timestamp}<br>
+          ${tagEmoji} ${geo.town}<br>
+          ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
+          ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
+        `);
 
-        await Promise.all(recent.map(async entry => {
-          const [lat, lon] = entry.location.split(',').map(Number);
-          const geo = await getTownAndCountry(lat, lon);
-          const distance = previous ? haversine(previous.lat, previous.lon, lat, lon) : 0;
-          totalDistance += distance;
-          previous = { lat, lon };
-
-          const tagEmoji = entry.tagId === "ZA-004" ? "🦛" : "🐧";
-const icon = entry.tagId === "ZA-004" ? hippoIcon : penguinIcon;
-const marker = L.marker([lat, lon], { icon }).bindPopup(`
-  <strong>${entry.name || "Anonymous"}</strong><br>
-  🕒 ${entry.timestamp}<br>
-  ${tagEmoji} ${geo.town}<br>
-  ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
-  ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
-`);
-
-          if (entry.tagId === "ZA-004") {
-            hippoMarkers.push(marker);
-            hippoPath.push([lat, lon]);
-          } else if (entry.tagId === "ZA-005") {
-            penguinMarkers.push(marker);
-            penguinPath.push([lat, lon]);
-          }
-
-          list.innerHTML += `
-            <div class="checkin">
-              <strong>${entry.name || "Anonymous"}</strong><br>
-              🕒 ${entry.timestamp}<br>
-              ${tagEmoji} ${geo.town}<br>
-              ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
-              🛣️ Distance from previous: ${distance.toFixed(1)} km<br>
-              ${entry.photo && entry.photo.startsWith("http")
-                ? `<a href="${entry.photo}" target="_blank">📸 View Photo</a><br><img src="${entry.photo}" alt="Uploaded photo">`
-                : ""}
-            </div>
-          `;
-        }));
-
-        if (hippoPath.length > 1) {
-          hippoPolyline = L.polyline(hippoPath, { color: hippoColor, weight: 4 }).addTo(map);
+        if (entry.tagId === "ZA-004") {
+          hippoMarkers.push(marker);
+          hippoPath.push([lat, lon]);
+        } else if (entry.tagId === "ZA-005") {
+          penguinMarkers.push(marker);
+          penguinPath.push([lat, lon]);
         }
 
-        if (penguinPath.length > 1) {
-          penguinPolyline = L.polyline(penguinPath, { color: penguinColor, weight: 4 }).addTo(map);
+        // Add flag trail marker
+        if (geo.countryCode) {
+          const flagIcon = L.icon({
+            iconUrl: `https://flagsapi.com/${geo.countryCode}/flat/32.png`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          });
+          L.marker([lat + 0.01, lon], { icon: flagIcon }).addTo(map);
         }
 
-        hippoMarkers.forEach(m => m.addTo(map));
-        penguinMarkers.forEach(m => m.addTo(map));
-
-        document.getElementById("summary").innerHTML = `
-          <p>🛣️ <strong>Total Distance:</strong> ${totalDistance.toFixed(1)} km</p>
-          <p>📅 <strong>Days Traveled:</strong> ${totalDays} days</p>
+        list.innerHTML += `
+          <div class="checkin">
+            <strong>${entry.name || "Anonymous"}</strong><br>
+            🕒 ${entry.timestamp}<br>
+            ${tagEmoji} ${geo.town}<br>
+            ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
+            🛣️ Distance from previous: ${distance.toFixed(1)} km<br>
+            ${entry.photo && entry.photo.startsWith("http")
+              ? `<a href="${entry.photo}" target="_blank">📸 View Photo</a><br><img src="${entry.photo}" alt="Uploaded photo">`
+              : ""}
+          </div>
         `;
+      }));
 
-        // Highlight last check-in
-        const lastEntry = recent[0];
-        if (lastEntry && lastEntry.location) {
-          const [lat, lon] = lastEntry.location.split(',').map(Number);
-          const lastEmoji = lastEntry.tagId === "ZA-004" ? "🦛" : "🐧";
-          const lastIcon = lastEntry.tagId === "ZA-004" ? hippoIcon : penguinIcon;
+      if (hippoPath.length > 1) {
+        hippoPolyline = L.polyline(hippoPath, { color: hippoColor, weight: 4 }).addTo(map);
+      }
 
-          const lastMarker = L.marker([lat, lon], {
-            icon: lastIcon
-          }).bindPopup(`
-            <strong>Last Check-In</strong><br>
-            ${lastEmoji} ${lastEntry.name || "Anonymous"}<br>
-            🕒 ${lastEntry.timestamp}
-          `).addTo(map);
+      if (penguinPath.length > 1) {
+        penguinPolyline = L.polyline(penguinPath, { color: penguinColor, weight: 4 }).addTo(map);
+      }
 
-          lastMarker.openPopup();
-          map.setView([lat, lon], 6);
+      hippoMarkers.forEach(m => m.addTo(map));
+      penguinMarkers.forEach(m => m.addTo(map));
 
-          const badge = document.createElement("div");
-          badge.id = "last-checkin-badge";
-          badge.innerHTML = `📍 Last Check-In: <strong>${lastEmoji} ${lastEntry.name || "Anonymous"}</strong> in <em>${lastEntry.location}</em>`;
-          document.body.appendChild(badge);
-        }
-      })
-      .catch(err => {
-        console.error("❌ Error loading check-ins:", err);
-        document.getElementById("checkin-list").innerText = "❌ Failed to load check-ins.";
-      });
-  </script>
+      document.getElementById("summary").innerHTML = `
+        <p>🛣️ <strong>Total Distance:</strong> ${totalDistance.toFixed(1)} km</p>
+        <p>📅 <strong>Days Traveled:</strong> ${totalDays} days</p>
+      `;
+
+      // Highlight last check-in
+      const lastEntry = recent[0];
+      if (lastEntry && lastEntry.location) {
+        const [lat, lon] = lastEntry.location.split(',').map(Number);
+        const lastEmoji = lastEntry.tagId === "ZA-004" ? "🦛" : "🐧";
+        const lastIcon = lastEntry.tagId === "ZA-004" ? hippoIcon : penguinIcon;
+
+        const lastMarker = L.marker([lat, lon], {
+          icon: lastIcon
+        }).bindPopup(`
+          <strong>Last Check-In</strong><br>
+          ${lastEmoji} ${lastEntry.name || "Anonymous"}<br>
+          🕒 ${lastEntry.timestamp}
+        `).addTo(map);
+
+        lastMarker.openPopup();
+        map.setView([lat, lon], 6);
+
+        const badge = document.createElement("div");
+        badge.id = "last-checkin-badge";
+        badge.innerHTML = `📍 Last Check-In: <strong>${lastEmoji} ${lastEntry.name || "Anonymous"}</strong> in <em>${lastEntry.location}</em>`;
+        document.body.appendChild(badge);
+      }
+
+      // Darken unvisited countries
+      fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+        .then(res => res.json())
+        .then(worldData => {
+          const visitedCountries = new Set(valid.map(e => e.countryCode?.toUpperCase()).filter(Boolean));
+
+          L.geoJSON(worldData, {
+            style: feature => {
+              const code = feature.properties.iso_a2;
+              const visited = visitedCountries.has(code);
+              return {
+                fillColor: visited ? '#222' : '#000',
+                fillOpacity: visited ? 0.1 : 0.6,
+                color: '#444',
+                weight: 0.5
+              };
+            }
+          }).addTo(map);
+        });
+    })
+    .catch(err => {
+      console.error("❌ Error loading check-ins:", err);
+      document.getElementById("checkin-list").innerText = "❌ Failed to load check-ins.";
+    });
+</script>
+
 </body>
 </html>
