@@ -295,17 +295,26 @@ console.log("✅ Visited countries:", Array.from(visitedCountries));
 
 
           L.geoJSON(worldData, {
-            style: feature => {
-              const code = feature.properties.iso_a2?.toUpperCase();
-              const visited = code && visitedCountries.has(code);
-              return {
-                fillColor: visited ? '#222' : '#000',
-                fillOpacity: visited ? 0.1 : 0.6,
-                color: visited ? '#00ff66' : '#444',
-                weight: visited ? 1 : 0.5
-              };
-            }
-          }).addTo(map);
+  style: feature => {
+    const code = feature.properties.iso_a2?.toUpperCase();
+    console.log("🌍 GeoJSON country:", code);
+
+    if (visitedCountries.has(code)) {
+      console.log("✅ MATCHED:", code);
+    } else {
+      console.log("❌ NOT MATCHED:", code);
+    }
+
+    const visited = code && visitedCountries.has(code);
+    return {
+      fillColor: visited ? '#222' : '#000',
+      fillOpacity: visited ? 0.1 : 0.6,
+      color: visited ? '#00ff66' : '#444',
+      weight: visited ? 1 : 0.5
+    };
+  }
+}).addTo(map);
+
         });
     })
     .catch(err => {
