@@ -20,27 +20,30 @@
       position: relative;
     }
     #sidebar {
-      width: 320px;
+      width: 260px;
       background: #111;
       color: white;
       overflow-y: auto;
-      padding: 1em;
+      padding: 0.8em;
+      font-size: 0.85em;
     }
     h2 {
       margin-top: 0;
-      font-size: 1.2em;
+      font-size: 1em;
       color: #00ff66;
     }
     .checkin {
-      margin-bottom: 1em;
+      margin-bottom: 0.6em;
       border-bottom: 1px solid #333;
-      padding-bottom: 1em;
+      padding-bottom: 0.6em;
+      font-size: 0.8em;
+      line-height: 1.4;
     }
     .checkin img {
       max-width: 100%;
-      max-height: 180px;
-      border-radius: 6px;
-      margin-top: 0.5em;
+      max-height: 120px;
+      border-radius: 4px;
+      margin-top: 0.4em;
       object-fit: cover;
     }
     a {
@@ -106,6 +109,20 @@
   </div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
+    const hippoIcon = L.icon({
+      iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/hippo.jpg',
+      iconSize: [40, 40],
+      iconAnchor: [20, 40],
+      popupAnchor: [0, -40]
+    });
+
+    const penguinIcon = L.icon({
+      iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/penguin.jpg',
+      iconSize: [40, 40],
+      iconAnchor: [20, 40],
+      popupAnchor: [0, -40]
+    });
+
     const map = L.map('map').setView([0, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
@@ -177,48 +194,44 @@
         list.innerHTML = "";
 
         const enriched = await Promise.all(recent.map(async entry => {
-          const [lat, lon] = entry.location.split(',').map(Number);
-          const geo = await getTownAndCountry(lat, lon);
-          const distance = previous ? haversine(previous.lat, previous.lon, lat, lon) : 0;
-          totalDistance += distance;
-          previous = { lat, lon };
+  const [lat, lon] = entry.location.split(',').map(Number);
+  const geo = await getTownAndCountry(lat, lon);
+  const distance = previous ? haversine(previous.lat, previous.lon, lat, lon) : 0;
+  totalDistance += distance;
+  previous = { lat, lon };
 
-          const tagColor = entry.tagId === "ZA-004" ? hippoColor : penguinColor;
-          const tagEmoji = entry.tagId === "ZA-004" ? "🦛" : "🐧";
-          const marker = L.circleMarker([lat, lon], {
-            radius: 8,
-            color: tagColor,
-            fillColor: tagColor,
-            fillOpacity: 0.8
-          }).bindPopup(`
-            <strong>${entry.name || "Anonymous"}</strong><br>
-            🕒 ${entry.timestamp}<br>
-            ${tagEmoji} ${geo.town}<br>
-            ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
-            ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
-          `);
+  const tagEmoji = entry.tagId === "ZA-004" ? "🦛" : "🐧";
+  const icon = entry.tagId === "ZA-004" ? hippoIcon : penguinIcon;
+  const marker = L.marker([lat, lon], { icon }).bindPopup(`
+    <strong>${entry.name || "Anonymous"}</strong><br>
+    🕒 ${entry.timestamp}<br>
+    ${tagEmoji} ${geo.town}<br>
+    ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
+    ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
+  `);
 
-          if (entry.tagId === "ZA-004") {
-            hippoMarkers.push(marker);
-            hippoPath.push([lat, lon]);
-          } else if (entry.tagId === "ZA-005") {
-            penguinMarkers.push(marker);
-            penguinPath.push([lat, lon]);
-          }
+  if (entry.tagId === "ZA-004") {
+    hippoMarkers.push(marker);
+    hippoPath.push([lat, lon]);
+  } else if (entry.tagId === "ZA-005") {
+    penguinMarkers.push(marker);
+    penguinPath.push([lat, lon]);
+  }
 
-          list.innerHTML += `
-            <div class="checkin">
-              <strong>${entry.name || "Anonymous"}</strong><br>
-              🕒 ${entry.timestamp}<br>
-              ${tagEmoji} ${geo.town}<br>
-              ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
-              🛣️ Distance from previous: ${distance.toFixed(1)} km<br>
-              ${entry.photo && entry.photo.startsWith("http")
-                ? `<a href="${entry.photo}" target="_blank">📸 View Photo</a><br><img src="${entry.photo}" alt="Uploaded photo">`
-                : ""}
-            </div>
-          `;
-        }));
+  list.innerHTML += `
+    <div class="checkin">
+      <strong>${entry.name || "Anonymous"}</strong><br>
+      🕒 ${entry.timestamp}<br>
+      ${tagEmoji} ${geo.town}<br>
+      ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
+      🛣️ Distance from previous: ${distance.toFixed(1)} km<br>
+      ${entry.photo && entry.photo.startsWith("http")
+        ? `<a href="${entry.photo}" target="_blank">📸 View Photo</a><br><img src="${entry.photo}" alt="Uploaded photo">`
+        : ""}
+    </div>
+  `;
+}));
+
 
         if (hippoPath.length > 1) {
           hippoPolyline = L.polyline(hippoPath, { color: hippoColor, weight: 4 }).addTo(map);
@@ -245,3 +258,5 @@
   </script>
 </body>
 </html>
+
+                
