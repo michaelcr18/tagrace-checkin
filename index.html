@@ -143,22 +143,23 @@
       let photoUrl = "";
 
       if (file) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("UPLOADCARE_STORE", "1");
-        formData.append("UPLOADCARE_PUB_KEY", "b6fd2347b271da80d239");
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("UPLOADCARE_STORE", "1");
+  formData.append("UPLOADCARE_PUB_KEY", "b6fd2347b271da80d239");
 
-        try {
-          const res = await fetch("https://upload.uploadcare.com/base/", {
-            method: "POST",
-            body: formData
-          });
-          const data = await res.json();
-          photoUrl = data.cdnUrl || "";
-        } catch (err) {
-          console.error("❌ Photo upload failed:", err);
-        }
-      }
+  try {
+    const res = await fetch("https://upload.uploadcare.com/base/", {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+    photoUrl = `https://4143hk85cv.ucarecdn.com/${data.file}/`; // ✅ Correct format
+    console.log("✅ Uploaded photo URL:", photoUrl);
+  } catch (err) {
+    console.error("❌ Photo upload failed:", err);
+  }
+}
 
       status.innerText = "📡 Getting location…";
 
