@@ -302,15 +302,15 @@
 
           L.geoJSON(worldData, {
             style: feature => {
-              const code = feature.properties.iso_a2;
-              const visited = visitedCountries.has(code);
-              return {
-                fillColor: visited ? '#222' : '#000',
-                fillOpacity: visited ? 0.1 : 0.6,
-                color: '#444',
-                weight: 0.5
-              };
-            }
+  const code = feature.properties.iso_a2?.toUpperCase();
+  const visited = code && visitedCountries.has(code);
+  return {
+    fillColor: visited ? '#222' : '#000',
+    fillOpacity: visited ? 0.1 : 0.6,
+    color: '#444',
+    weight: 0.5
+  };
+}
           }).addTo(map);
         });
     })
