@@ -140,7 +140,7 @@
 
   <br>
 
-  <button class="checkin-button" onclick="getLocation()">⚡ Click to update Suzie's location!</button>
+  <button id="checkin-button" class="checkin-button" onclick="getLocation()">⚡ Click to update location!</button>
   <div id="status" class="flash">⚡ Waiting for check-in…</div>
 
   <a href="map.html" target="_blank">
@@ -267,13 +267,21 @@ if (data.file) {
       }
     } 
      document.getElementById("tagId").addEventListener("change", function() {
-      loadLastLocation(this.value);
-    });
+  const tagId = this.value;
+  loadLastLocation(tagId);
+  updateButtonLabel(tagId);
+});
 
-    window.addEventListener("load", () => {
-      const tagId = document.getElementById("tagId").value;
-      loadLastLocation(tagId);
-    });
+window.addEventListener("load", () => {
+  const tagId = document.getElementById("tagId").value;
+  loadLastLocation(tagId);
+  updateButtonLabel(tagId);
+});
+    function updateButtonLabel(tagId) {
+  const button = document.getElementById("checkin-button");
+  const name = tagId === "ZA-004" ? "Suzie" : tagId === "ZA-005" ? "Percy" : "the tag";
+  button.innerText = `⚡ Click to update ${name}'s location!`;
+}
   </script>
   <p id="version-tag">🔧 Code Version: v1.6 — 2025-09-23</p>
 </body>
