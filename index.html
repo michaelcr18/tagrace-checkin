@@ -101,6 +101,14 @@
   opacity: 0.6;
   margin-top: 3em;
 }
+      #photo-confirmation {
+    animation: fadeIn 0.8s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   </style>
 </head>
 <body>
@@ -126,6 +134,10 @@
   <label for="photo" class="custom-file-button">📸 Add Photo</label>
 </div>
 <input type="file" id="photo" accept="image/*" capture="environment">
+  <div id="photo-confirmation" style="margin-top: 0.5em; font-size: 0.9em; color: #00ffcc; display: none;">
+  ✅ Photo uploaded successfully!
+</div>
+
   <br>
 
   <button class="checkin-button" onclick="getLocation()">⚡ Click to update Suzie's location!</button>
@@ -165,6 +177,9 @@
     const data = await res.json();
     photoUrl = `https://4143hk85cv.ucarecdn.com/${data.file}/`; // ✅ Correct format
     console.log("✅ Uploaded photo URL:", photoUrl);
+    
+  // Show confirmation
+  document.getElementById("photo-confirmation").style.display = "block";
   } catch (err) {
     console.error("❌ Photo upload failed:", err);
   }
@@ -230,6 +245,6 @@
       }
     }
   </script>
-  <p id="version-tag">🔧 Code Version: v1.3 — 2025-09-23</p>
+  <p id="version-tag">🔧 Code Version: v1.4 — 2025-09-23</p>
 </body>
 </html>
