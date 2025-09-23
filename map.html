@@ -213,14 +213,14 @@
           previous = { lat, lon };
 
           const tagEmoji = entry.tagId === "ZA-004" ? "🦛" : "🐧";
-          const icon = entry.tagId === "ZA-004" ? hippoIcon : penguinIcon;
-          const marker = L.marker([lat, lon], { icon }).bindPopup(`
-            <strong>${entry.name || "Anonymous"}</strong><br>
-            🕒 ${entry.timestamp}<br>
-            ${tagEmoji} ${geo.town}<br>
-            ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
-            ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
-          `);
+const icon = entry.tagId === "ZA-004" ? hippoIcon : penguinIcon;
+const marker = L.marker([lat, lon], { icon }).bindPopup(`
+  <strong>${entry.name || "Anonymous"}</strong><br>
+  🕒 ${entry.timestamp}<br>
+  ${tagEmoji} ${geo.town}<br>
+  ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
+  ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
+`);
 
           if (entry.tagId === "ZA-004") {
             hippoMarkers.push(marker);
