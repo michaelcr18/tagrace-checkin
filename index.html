@@ -176,7 +176,7 @@
     });
     const data = await res.json();
 if (data.file) {
-  photoUrl = `https://4143hk85cv.ucarecdn.com/${data.file}/`;
+  photoUrl = `https://4143hk85cv.ucarecd.net/${data.file}/${Date.now()}.jpg`;
   console.log("✅ Uploaded photo URL:", photoUrl);
   document.getElementById("photo-confirmation").style.display = "block";
 } else {
