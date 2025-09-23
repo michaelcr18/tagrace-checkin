@@ -305,12 +305,13 @@
   const code = feature.properties.iso_a2?.toUpperCase();
   const visited = code && visitedCountries.has(code);
   return {
-    fillColor: visited ? '#222' : '#000',
-    fillOpacity: visited ? 0.1 : 0.6,
-    color: '#444',
-    weight: 0.5
+    fillColor: visited ? '#222' : '#000',        // lighter for visited
+    fillOpacity: visited ? 0.1 : 0.6,            // more transparent for visited
+    color: visited ? '#00ff66' : '#444',         // optional: green border for visited
+    weight: visited ? 1 : 0.5
   };
 }
+
           }).addTo(map);
         });
     })
@@ -321,7 +322,7 @@
 </script>
   
 <div style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #888; z-index: 1003;">
-  TagRace Map v1.4 — 2025-09-23
+  TagRace Map v1.5 — 2025-09-23
 </div>
 
 </body>
