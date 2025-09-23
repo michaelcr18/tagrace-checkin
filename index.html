@@ -120,9 +120,12 @@
   <br>
 
   <input type="text" id="name" placeholder="Your name (optional)">
-  <br>
+<br><br> <!-- Adds extra vertical space -->
+
+<div style="margin-top: 1em;">
   <label for="photo" class="custom-file-button">📸 Add Photo</label>
-  <input type="file" id="photo" accept="image/*" capture="environment">
+</div>
+<input type="file" id="photo" accept="image/*" capture="environment">
   <br>
 
   <button class="checkin-button" onclick="getLocation()">⚡ Click to update Suzie's location!</button>
