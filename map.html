@@ -160,19 +160,25 @@
   }
 
   async function getTownAndCountry(lat, lon) {
-    const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=67cfc38cc2264ec5bd420c63df393331`;
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      const props = data.features[0]?.properties || {};
-      return {
-        town: props.city || props.town || props.village || "Unknown",
-        countryCode: props.country_code?.toUpperCase() || "UN"
-      };
-    } catch {
-      return { town: "Unknown", countryCode: "UN" };
-    }
+  const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=67cfc38cc2264ec5bd420c63df393331`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const props = data.features[0]?.properties || {};
+    return {
+      town: props.city || props.town || props.village || "Unknown",
+      countryCode: props.country_code?.toUpperCase() || "UN",
+      countryName: props.country || "Unknown" // ✅ Add this line here
+    };
+  } catch {
+    return {
+      town: "Unknown",
+      countryCode: "UN",
+      countryName: "Unknown" // ✅ Add this line here too
+    };
   }
+}
+
 
   function toggleTag(tag, show) {
     const markers = tag === 'hippo' ? hippoMarkers : penguinMarkers;
@@ -289,29 +295,32 @@
   .then(res => res.json())
   .then(worldData => {
     const visitedCountries = new Set(
-      recent.map(e => e.countryName?.toLowerCase()).filter(Boolean)
-    );
+  recent.map(e => e.countryName?.toLowerCase()).filter(Boolean)
+);
+console.log("✅ Visited countries:", Array.from(visitedCountries));
+
     console.log("✅ Visited countries:", Array.from(visitedCountries));
 
     L.geoJSON(worldData, {
       style: feature => {
-        const name = feature.properties.name?.toLowerCase();
-        console.log("🌍 GeoJSON country name:", name);
+  const name = feature.properties.name?.toLowerCase();
+  console.log("🌍 GeoJSON country name:", name);
 
-        if (visitedCountries.has(name)) {
-          console.log("✅ MATCHED:", name);
-        } else {
-          console.log("❌ NOT MATCHED:", name);
-        }
+  if (visitedCountries.has(name)) {
+    console.log("✅ MATCHED:", name);
+  } else {
+    console.log("❌ NOT MATCHED:", name);
+  }
 
-        const visited = name && visitedCountries.has(name);
-        return {
-          fillColor: visited ? '#222' : '#000',
-          fillOpacity: visited ? 0.1 : 0.6,
-          color: visited ? '#00ff66' : '#444',
-          weight: visited ? 1 : 0.5
-        };
-      }
+  const visited = name && visitedCountries.has(name);
+  return {
+    fillColor: visited ? '#222' : '#000',
+    fillOpacity: visited ? 0.1 : 0.6,
+    color: visited ? '#00ff66' : '#444',
+    weight: visited ? 1 : 0.5
+  };
+}
+
     }).addTo(map);
   });
 
@@ -323,7 +332,7 @@
 </script>
   
 <div style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #888; z-index: 1003;">
-  TagRace Map v1.11 — 2025-09-23
+  TagRace Map v1.12 — 2025-09-23
 </div>
 
 </body>
