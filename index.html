@@ -306,7 +306,74 @@ window.addEventListener("load", () => {
 
   button.innerText = `⚡ Click to update ${name}'s location!`;
 }
+const translations = {
+  en: `Congratulations on finding this character! It is part of TagRace—a global adventure race, tracking real-world movement.
+They are currently on a journey to Hope, Canada, carried by people all around the world!
+You are now part of the journey! Every check-in helps trace its path across continents. Take this character along with you on your adventures and snap photos in interesting locations. After moving it along, leave it in a safe space or pass it to the next person to continue with its global journey.
+
+🏁 Help it reach its final destination!`,
+
+  zu: `Halala! Uthole lo mlingiswa! Ingxenye ye-TagRace—umjaho womhlaba wonke wokuzijabulisa, olandela ukuhamba kwangempela.
+Okwamanje usohambweni oluya eHope, eCanada, ethwalwa abantu abavela emhlabeni wonke!
+Manje usuyingxenye yohambo! Ukubhalisa ngakunye kusiza ukulandelela indlela yalo kuwo wonke amazwekazi. Hamba nalo mlingiswa ezindaweni ezithakazelisayo futhi uthathe izithombe. Ngemuva kokuhamba naye, mshiye endaweni ephephile noma unikeze omunye umuntu aqhubeke nohambo lomhlaba wonke.
+
+🏁 Msize afinyelele endaweni yokuqeda!`,
+
+  af: `Baie geluk! Jy het hierdie karakter gevind. Dit is deel van TagRace—'n wêreldwye avontuurwedloop wat regte bewegings volg.
+Hulle is tans op pad na Hope, Kanada, gedra deur mense regoor die wêreld!
+Jy is nou deel van die reis! Elke inskrywing help om die pad oor kontinente te volg. Neem hierdie karakter saam op jou avonture en neem foto's op interessante plekke. Laat dit dan in 'n veilige plek of gee dit aan die volgende persoon om die wêreldreis voort te sit.
+
+🏁 Help dit om sy eindbestemming te bereik!`,
+
+  fr: `Félicitations pour avoir trouvé ce personnage ! Il fait partie de TagRace—une course d'aventure mondiale qui suit les déplacements réels.
+Il est actuellement en route vers Hope, au Canada, porté par des personnes du monde entier !
+Vous faites maintenant partie du voyage ! Chaque enregistrement aide à tracer son parcours à travers les continents. Emmenez ce personnage avec vous dans vos aventures et prenez des photos dans des lieux intéressants. Après l'avoir déplacé, laissez-le dans un endroit sûr ou passez-le à la personne suivante pour poursuivre son voyage mondial.
+
+🏁 Aidez-le à atteindre sa destination finale !`,
+
+  de: `Herzlichen Glückwunsch! Du hast diesen Charakter gefunden. Er ist Teil von TagRace—einem globalen Abenteuer-Rennen, das echte Bewegungen verfolgt.
+Derzeit ist er auf dem Weg nach Hope, Kanada, getragen von Menschen aus aller Welt!
+Du bist jetzt Teil der Reise! Jeder Check-in hilft, seinen Weg über Kontinente nachzuverfolgen. Nimm diesen Charakter mit auf deine Abenteuer und mache Fotos an interessanten Orten. Nachdem du ihn weitergebracht hast, lasse ihn an einem sicheren Ort oder gib ihn an die nächste Person weiter, damit die globale Reise weitergeht.
+
+🏁 Hilf ihm, sein endgültiges Ziel zu erreichen!`,
+
+  ja: `このキャラクターを見つけてくれておめでとうございます！これはTagRaceの一部です—世界中を旅するリアルな冒険レースです。
+現在、このキャラクターはカナダのHopeに向かって旅をしています。世界中の人々によって運ばれています！
+あなたもこの旅の一員です！チェックインするたびに、その足跡が大陸を越えて記録されます。このキャラクターを冒険に連れて行き、面白い場所で写真を撮ってください。移動させた後は、安全な場所に置くか、次の人に渡して世界の旅を続けましょう。
+
+🏁 最終目的地に到達するのを手伝ってください！`,
+
+  zh: `恭喜你找到这个角色！它是TagRace的一部分——一个全球冒险竞赛，追踪真实世界的移动。
+它目前正在前往加拿大Hope的旅程中，由世界各地的人们携带！
+你现在是这段旅程的一部分！每一次签到都有助于追踪它穿越各大洲的路径。带着这个角色去冒险，并在有趣的地点拍照。在你移动它之后，请将它留在一个安全的地方，或交给下一个人继续它的全球旅程。
+
+🏁 帮助它到达最终目的地！`,
+
+  es: `¡Felicidades por encontrar este personaje! Es parte de TagRace—una carrera de aventuras global que rastrea el movimiento real.
+Actualmente está en camino a Hope, Canadá, llevado por personas de todo el mundo.
+¡Ahora eres parte del viaje! Cada registro ayuda a trazar su ruta a través de los continentes. Lleva este personaje contigo en tus aventuras y toma fotos en lugares interesantes. Después de moverlo, déjalo en un lugar seguro o pásalo a la siguiente persona para continuar su viaje global.
+
+🏁 ¡Ayúdalo a llegar a su destino final!`,
+
+  it: `Congratulazioni per aver trovato questo personaggio! Fa parte di TagRace—una gara di avventura globale che traccia movimenti reali.
+Attualmente è in viaggio verso Hope, Canada, trasportato da persone di tutto il mondo!
+Ora fai parte del viaggio! Ogni check-in aiuta a tracciare il suo percorso attraverso i continenti. Porta questo personaggio con te nelle tue avventure e scatta foto in luoghi interessanti. Dopo averlo spostato, lascialo in un luogo sicuro o passalo alla prossima persona per continuare il suo viaggio globale.
+
+🏁 Aiutalo a raggiungere la sua destinazione finale!`,
+
+  ru: `Поздравляем! Вы нашли этого персонажа! Он является частью TagRace—глобальной приключенческой гонки, отслеживающей реальные перемещения.
+Сейчас он направляется в Хоуп, Канада, передаваемый людьми со всего мира!
+Теперь вы часть этого путешествия! Каждая регистрация помогает отслеживать его путь через континенты. Возьмите этого персонажа с собой в приключения и фотографируйте его в интересных местах. После перемещения оставьте его в безопасном месте или передайте следующему человеку, чтобы продолжить его глобальное путешествие.
+
+🏁 Помогите ему достичь конечной цели!`
+};
+
+document.getElementById("language-select").addEventListener("change", function () {
+  const selected = this.value;
+  const intro = document.getElementById("description");
+  intro.innerText = translations[selected] || translations["en"];
+});
   </script>
-  <p id="version-tag">🔧 Code Version: v1.7 — 2025-09-23</p>
+  <p id="version-tag">🔧 Code Version: v1.8 — 2025-09-23</p>
 </body>
 </html>
