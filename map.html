@@ -237,16 +237,27 @@ fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
       markerArray.push(marker);
       pathArray.push([lat, lon]);
 
-      list.innerHTML += `
-        <div class="checkin">
-          <strong>${entry.name || "Anonymous"}</strong><br>
-          🕒 ${entry.timestamp}<br>
-          ${tagEmoji} ${geo.town}<br>
-          ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
-          🛣️ Distance from previous: ${distance.toFixed(1)} km<br>
-          ${entry.photo && entry.photo.startsWith("http") ? `<a href="${entry.photo}" target="_blank">📸 View Photo</a><br><img src="${entry.photo}" alt="Uploaded photo">` : ""}
-        </div>
-      `;
+      const bgColor = {
+  "ZA-001": "#ffffaa", // Spongebob yellow
+  "ZA-002": "#ffccdd", // Patrick pink
+  "ZA-003": "#ffdd99", // Smileys orange
+  "ZA-004": "#e0d4b0", // Hippo light brown
+  "ZA-005": "#f5f5f5"  // Penguin white
+};
+
+list.innerHTML += `
+  <div class="checkin" style="background: ${bgColor[entry.tagId] || '#222'}; padding: 0.6em; border-radius: 6px; margin-bottom: 0.6em;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div style="font-size: 0.8em; color: #555;">🕒 ${new Date(entry.timestamp).toLocaleDateString()}</div>
+      <div style="font-weight: bold;">${tagEmoji} ${entry.name || "Anonymous"}</div>
+    </div>
+    <div style="margin-top: 0.4em;">
+      ${geo.town}<br>
+      ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
+    </div>
+  </div>
+`;
+
     }));
 
     // 🧵 Draw paths
