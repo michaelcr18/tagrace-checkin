@@ -391,10 +391,6 @@ if (lastEntry.tagId === "ZA-001") {
   lastIcon = penguinIcon;
 }
 
-
-        const lastMarker = L.marker([lat, lon], {
-          icon: lastIcon
-        }).bindPopup(`
           <strong>Last Check-In</strong><br>
           ${lastEmoji} ${lastEntry.name || "Anonymous"}<br>
           🕒 ${lastEntry.timestamp}
