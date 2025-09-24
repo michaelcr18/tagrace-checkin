@@ -204,77 +204,68 @@ fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
     list.innerHTML = "";
 
     await Promise.all(recent.map(async entry => {
-      const [lat, lon] = entry.location.split(',').map(Number);
-      const geo = await getTownAndCountry(lat, lon);
-      entry.countryName = geo.countryName;
-      const distance = previous ? haversine(previous.lat, previous.lon, lat, lon) : 0;
-      totalDistance += distance;
-      previous = { lat, lon };
+  const [lat, lon] = entry.location.split(',').map(Number);
+  const geo = await getTownAndCountry(lat, lon);
+  entry.countryName = geo.countryName;
 
-      let tagEmoji = "❓", icon = null, markerArray = null, pathArray = null;
-      if (entry.tagId === "ZA-001") {
-        tagEmoji = "🧽"; icon = spongebobIcon; markerArray = spongebobMarkers; pathArray = spongebobPath;
-      } else if (entry.tagId === "ZA-002") {
-        tagEmoji = "🌸"; icon = patrickIcon; markerArray = patrickMarkers; pathArray = patrickPath;
-      } else if (entry.tagId === "ZA-003") {
-        tagEmoji = "😀"; icon = smileysIcon; markerArray = smileysMarkers; pathArray = smileysPath;
-      } else if (entry.tagId === "ZA-004") {
-        tagEmoji = "🦛"; icon = hippoIcon; markerArray = hippoMarkers; pathArray = hippoPath;
-      } else if (entry.tagId === "ZA-005") {
-        tagEmoji = "🐧"; icon = penguinIcon; markerArray = penguinMarkers; pathArray = penguinPath;
-      } else {
-        return;
-      }
+  const cityLink = `https://www.google.com/maps?q=${lat},${lon}`;
+  const distance = previous ? haversine(previous.lat, previous.lon, lat, lon) : 0;
+  totalDistance += distance;
+  previous = { lat, lon };
 
-      const marker = L.marker([lat, lon], { icon }).bindPopup(`
-        <strong>${entry.name || "Anonymous"}</strong><br>
-        🕒 ${entry.timestamp}<br>
-        ${tagEmoji} ${geo.town}<br>
-        ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
-        ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
-      `);
-      marker.addTo(map);
-      markerArray.push(marker);
-      pathArray.push([lat, lon]);
+  let tagEmoji = "❓", icon = null, markerArray = null, pathArray = null;
+  if (entry.tagId === "ZA-001") {
+    tagEmoji = "🧽"; icon = spongebobIcon; markerArray = spongebobMarkers; pathArray = spongebobPath;
+  } else if (entry.tagId === "ZA-002") {
+    tagEmoji = "🌸"; icon = patrickIcon; markerArray = patrickMarkers; pathArray = patrickPath;
+  } else if (entry.tagId === "ZA-003") {
+    tagEmoji = "😀"; icon = smileysIcon; markerArray = smileysMarkers; pathArray = smileysPath;
+  } else if (entry.tagId === "ZA-004") {
+    tagEmoji = "🦛"; icon = hippoIcon; markerArray = hippoMarkers; pathArray = hippoPath;
+  } else if (entry.tagId === "ZA-005") {
+    tagEmoji = "🐧"; icon = penguinIcon; markerArray = penguinMarkers; pathArray = penguinPath;
+  } else {
+    return;
+  }
 
-      const bgColor = {
-  "ZA-001": "#ffffaa", // Spongebob yellow
-  "ZA-002": "#ffccdd", // Patrick pink
-  "ZA-003": "#ffdd99", // Smileys orange
-  "ZA-004": "#e0d4b0", // Hippo light brown
-  "ZA-005": "#f5f5f5"  // Penguin white
-};
+  const marker = L.marker([lat, lon], { icon }).bindPopup(`
+    <strong>${entry.name || "Anonymous"}</strong><br>
+    🕒 ${entry.timestamp}<br>
+    ${tagEmoji} ${geo.town}<br>
+    ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
+    ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
+  `);
+  marker.addTo(map);
+  markerArray.push(marker);
+  pathArray.push([lat, lon]);
 
-const bgColor = {
-  "ZA-001": "#ffffaa", // Spongebob yellow
-  "ZA-002": "#ffccdd", // Patrick pink
-  "ZA-003": "#ffdd99", // Smileys orange
-  "ZA-004": "#e0d4b0", // Hippo light brown
-  "ZA-005": "#f5f5f5"  // Penguin white
-};
+  const bgColor = {
+    "ZA-001": "#ffffaa", // Spongebob yellow
+    "ZA-002": "#ffccdd", // Patrick pink
+    "ZA-003": "#ffdd99", // Smileys orange
+    "ZA-004": "#e0d4b0", // Hippo light brown
+    "ZA-005": "#f5f5f5"  // Penguin white
+  };
 
-const cityLink = `https://www.google.com/maps?q=${lat},${lon}`;
-
-list.innerHTML += `
-  <div class="checkin" style="background: ${bgColor[entry.tagId] || '#222'}; padding: 0.6em; border-radius: 6px; margin-bottom: 0.6em;">
-    <div style="display: flex; align-items: center; justify-content: space-between;">
-      <div style="font-size: 0.8em; color: #555;">🕒 ${new Date(entry.timestamp).toLocaleDateString()}</div>
-      <div style="font-weight: bold;">${tagEmoji} ${entry.name || "Anonymous"}</div>
-    </div>
-    <div style="margin-top: 0.4em;">
-      <a href="${cityLink}" target="_blank" style="color: inherit; text-decoration: underline;">${geo.town}</a>
-      ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/24.png" style="margin-left: 6px; vertical-align: middle;">` : ""}
-    </div>
-    ${entry.photo && entry.photo.startsWith("http") ? `
-      <div style="margin-top: 0.4em;">
-        <a href="${entry.photo}" target="_blank">📸 View Photo</a>
+  list.innerHTML += `
+    <div class="checkin" style="background: ${bgColor[entry.tagId] || '#222'}; padding: 0.6em; border-radius: 6px; margin-bottom: 0.6em;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="font-size: 0.8em; color: #555;">🕒 ${new Date(entry.timestamp).toLocaleDateString()}</div>
+        <div style="font-weight: bold;">${tagEmoji} ${entry.name || "Anonymous"}</div>
       </div>
-    ` : ""}
-  </div>
-`;
+      <div style="margin-top: 0.4em;">
+        <a href="${cityLink}" target="_blank" style="color: inherit; text-decoration: underline;">${geo.town}</a>
+        ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/24.png" style="margin-left: 6px; vertical-align: middle;">` : ""}
+      </div>
+      ${entry.photo && entry.photo.startsWith("http") ? `
+        <div style="margin-top: 0.4em;">
+          <a href="${entry.photo}" target="_blank">📸 View Photo</a>
+        </div>
+      ` : ""}
+    </div>
+  `;
+}));
 
-
-    }));
 
     // 🧵 Draw paths
     if (hippoPath.length > 1) hippoPolyline = L.polyline(hippoPath, { color: hippoColor, weight: 4 }).addTo(map);
