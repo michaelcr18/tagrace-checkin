@@ -320,15 +320,6 @@ markerArray.push(marker);
 pathArray.push([lat, lon]);
 
 
-        const marker = L.marker([lat, lon], { icon }).bindPopup(`
-          <strong>${entry.name || "Anonymous"}</strong><br>
-          🕒 ${entry.timestamp}<br>
-          ${tagEmoji} ${geo.town}<br>
-          ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
-          ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
-        `);
-
-
         list.innerHTML += `
           <div class="checkin">
             <strong>${entry.name || "Anonymous"}</strong><br>
@@ -351,8 +342,23 @@ pathArray.push([lat, lon]);
         penguinPolyline = L.polyline(penguinPath, { color: penguinColor, weight: 4 }).addTo(map);
       }
 
+      if (spongebobPath.length > 1) {
+  spongebobPolyline = L.polyline(spongebobPath, { color: spongebobColor, weight: 4 }).addTo(map);
+}
+if (patrickPath.length > 1) {
+  patrickPolyline = L.polyline(patrickPath, { color: patrickColor, weight: 4 }).addTo(map);
+}
+if (smileysPath.length > 1) {
+  smileysPolyline = L.polyline(smileysPath, { color: smileysColor, weight: 4 }).addTo(map);
+}
+
+    
       hippoMarkers.forEach(m => m.addTo(map));
       penguinMarkers.forEach(m => m.addTo(map));
+      spongebobMarkers.forEach(m => m.addTo(map));
+patrickMarkers.forEach(m => m.addTo(map));
+smileysMarkers.forEach(m => m.addTo(map));
+
 
       document.getElementById("summary").innerHTML = `
         <p>🛣️ <strong>Total Distance:</strong> ${totalDistance.toFixed(1)} km</p>
@@ -363,8 +369,26 @@ pathArray.push([lat, lon]);
       const lastEntry = recent[0];
       if (lastEntry && lastEntry.location) {
         const [lat, lon] = lastEntry.location.split(',').map(Number);
-        const lastEmoji = lastEntry.tagId === "ZA-004" ? "🦛" : "🐧";
-        const lastIcon = lastEntry.tagId === "ZA-004" ? hippoIcon : penguinIcon;
+        let lastEmoji = "❓";
+let lastIcon = null;
+
+if (lastEntry.tagId === "ZA-001") {
+  lastEmoji = "🧽";
+  lastIcon = spongebobIcon;
+} else if (lastEntry.tagId === "ZA-002") {
+  lastEmoji = "🌸";
+  lastIcon = patrickIcon;
+} else if (lastEntry.tagId === "ZA-003") {
+  lastEmoji = "😀";
+  lastIcon = smileysIcon;
+} else if (lastEntry.tagId === "ZA-004") {
+  lastEmoji = "🦛";
+  lastIcon = hippoIcon;
+} else if (lastEntry.tagId === "ZA-005") {
+  lastEmoji = "🐧";
+  lastIcon = penguinIcon;
+}
+
 
         const lastMarker = L.marker([lat, lon], {
           icon: lastIcon
