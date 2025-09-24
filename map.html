@@ -308,13 +308,6 @@ if (entry.tagId === "ZA-001") {
   return; // skip unknown tags
 }
 
-const marker = L.marker([lat, lon], { icon }).bindPopup(`
-  <strong>${entry.name || "Anonymous"}</strong><br>
-  🕒 ${entry.timestamp}<br>
-  ${tagEmoji} ${geo.town}<br>
-  ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
-  ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
-`);
 marker.addTo(map);
 markerArray.push(marker);
 pathArray.push([lat, lon]);
@@ -358,7 +351,16 @@ if (smileysPath.length > 1) {
       spongebobMarkers.forEach(m => m.addTo(map));
 patrickMarkers.forEach(m => m.addTo(map));
 smileysMarkers.forEach(m => m.addTo(map));
-
+      
+if (spongebobPath.length > 1) {
+  spongebobPolyline = L.polyline(spongebobPath, { color: spongebobColor, weight: 4 }).addTo(map);
+}
+if (patrickPath.length > 1) {
+  patrickPolyline = L.polyline(patrickPath, { color: patrickColor, weight: 4 }).addTo(map);
+}
+if (smileysPath.length > 1) {
+  smileysPolyline = L.polyline(smileysPath, { color: smileysColor, weight: 4 }).addTo(map);
+}
 
       document.getElementById("summary").innerHTML = `
         <p>🛣️ <strong>Total Distance:</strong> ${totalDistance.toFixed(1)} km</p>
@@ -447,7 +449,7 @@ if (lastEntry.tagId === "ZA-001") {
 </script>
   
 <div style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #888; z-index: 1003;">
-  TagRace Map v1.19 — 2025-09-23
+  TagRace Map v1.20 — 2025-09-23
 </div>
 
 </body>
