@@ -107,10 +107,13 @@
   <div id="sidebar">
     <h2>🦛 TagRace Journey Summary</h2>
     <div id="summary">Loading...</div>
-    <div class="toggle-group">
-      <label><input type="checkbox" checked onchange="toggleTag('hippo', this.checked)"> 🦛 Show Suzie</label>
-      <label><input type="checkbox" checked onchange="toggleTag('penguin', this.checked)"> 🐧 Show Percy</label>
-    </div>
+   <div class="toggle-group">
+  <label><input type="checkbox" checked onchange="toggleTag('spongebob', this.checked)"> 🧽 Show Spongebob</label>
+  <label><input type="checkbox" checked onchange="toggleTag('patrick', this.checked)"> 🌸 Show Patrick</label>
+  <label><input type="checkbox" checked onchange="toggleTag('smileys', this.checked)"> 😀 Show 3 Smileys</label>
+  <label><input type="checkbox" checked onchange="toggleTag('hippo', this.checked)"> 🦛 Show Suzie</label>
+  <label><input type="checkbox" checked onchange="toggleTag('penguin', this.checked)"> 🐧 Show Percy</label>
+</div>
     <h2>📍 Last 10 Check-Ins</h2>
     <div id="checkin-list">Loading...</div>
   </div>
@@ -135,6 +138,26 @@
     popupAnchor: [0, -40]
   });
 
+const spongebobIcon = L.icon({
+  iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/spongebob.jpg',
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -40]
+});
+
+const patrickIcon = L.icon({
+  iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/patrick.jpg',
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -40]
+});
+
+const smileysIcon = L.icon({
+  iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/smileys.jpg',
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -40]
+});
   const map = L.map('map').setView([0, 0], 2);
   L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
   maxZoom: 17,
@@ -144,6 +167,21 @@
   const hippoColor = '#00ff66';
   const penguinColor = '#3399ff';
 
+const spongebobColor = '#ffff00';
+const patrickColor = '#ff33cc';
+const smileysColor = '#ffcc00';
+
+const spongebobMarkers = [];
+const patrickMarkers = [];
+const smileysMarkers = [];
+
+const spongebobPath = [];
+const patrickPath = [];
+const smileysPath = [];
+
+let spongebobPolyline, patrickPolyline, smileysPolyline;
+
+let spongebobPolyline, patrickPolyline, smileysPolyline;
   const hippoMarkers = [];
   const penguinMarkers = [];
   const hippoPath = [];
@@ -333,7 +371,7 @@
 </script>
   
 <div style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #888; z-index: 1003;">
-  TagRace Map v1.15 — 2025-09-23
+  TagRace Map v1.16 — 2025-09-23
 </div>
 
 </body>
