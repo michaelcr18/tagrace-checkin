@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>TagRace GPS Check-In</title>
+  <title>TagRace Character Check-In</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -115,15 +115,18 @@
   <h1>TagRace GPS Check-In</h1>
 
   <p id="description">
-    🌍 Suzie the Hippo is part of <strong>TagRace</strong>—a global adventure tracking real-world movement.<br>
-    She is currently on a journey to <strong>Hope, Canada</strong>, carried by players, travelers, and dreamers.<br>
-    You are now part of the journey! Every check-in helps trace her path across continents. After moving her along, leave her in a safe space for the next person to find.<br><br>
-    🏁 <strong>Help her reach her final destination!</strong>
+    Congratulations on finding this character! It is part of <strong>TagRace</strong>—a global adventure race, tracking real-world movement.<br>
+    They are currently on a journey to <strong>Hope, Canada</strong>, carried by people all around the world!<br>
+    You are now part of the journey! Every check-in helps trace its path across continents. Take this character along with you on your adventures and snap photos in interesting locations. After moving it along, leave it in a safe space or pass it to the next person to continue with its global journey.<br><br>
+    🏁 <strong>Help it reach its final destination!</strong>
   </p>
 
   <select id="tagId">
-    <option value="ZA-004">Suzie the Hippo</option>
-    <option value="ZA-005">Percy the Penguin</option>
+    <option value="ZA-004">Hippo</option>
+    <option value="ZA-005">Penguin</option>
+<option value="ZA-001">Spongebob</option>
+<option value="ZA-002">Patrick</option>
+<option value="ZA-003">3 Smileys</option>
   </select>
   <br>
 
@@ -144,7 +147,7 @@
   <div id="status" class="flash">⚡ Waiting for check-in…</div>
 
   <a href="map.html" target="_blank">
-    <button>🗺️ View her Journey!</button>
+    <button>🗺️ View Journey!</button>
   </a>
 
   <div id="location-info">📍 Loading last known location…</div>
@@ -279,7 +282,28 @@ window.addEventListener("load", () => {
 });
     function updateButtonLabel(tagId) {
   const button = document.getElementById("checkin-button");
-  const name = tagId === "ZA-004" ? "Suzie" : tagId === "ZA-005" ? "Percy" : "the tag";
+
+  let name;
+  switch (tagId) {
+    case "ZA-001":
+      name = "Spongebob";
+      break;
+    case "ZA-002":
+      name = "Patrick";
+      break;
+    case "ZA-003":
+      name = "3 Smileys";
+      break;
+    case "ZA-004":
+      name = "Hippo";
+      break;
+    case "ZA-005":
+      name = "Penguin";
+      break;
+    default:
+      name = "the tag";
+  }
+
   button.innerText = `⚡ Click to update ${name}'s location!`;
 }
   </script>
