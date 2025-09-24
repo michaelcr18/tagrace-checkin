@@ -139,21 +139,21 @@
   });
 
 const spongebobIcon = L.icon({
-  iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/spongebob.jpg',
+  iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/spongebob.png',
   iconSize: [40, 40],
   iconAnchor: [20, 40],
   popupAnchor: [0, -40]
 });
 
 const patrickIcon = L.icon({
-  iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/patrick.jpg',
+  iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/patrick.png',
   iconSize: [40, 40],
   iconAnchor: [20, 40],
   popupAnchor: [0, -40]
 });
 
 const smileysIcon = L.icon({
-  iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/smileys.jpg',
+  iconUrl: 'https://michaelcr18.github.io/tagrace-checkin/smileys.png',
   iconSize: [40, 40],
   iconAnchor: [20, 40],
   popupAnchor: [0, -40]
@@ -220,26 +220,41 @@ let spongebobPolyline, patrickPolyline, smileysPolyline;
 
 
   function toggleTag(tag, show) {
-    const markers = tag === 'hippo' ? hippoMarkers : penguinMarkers;
-    const polyline = tag === 'hippo' ? hippoPolyline : penguinPolyline;
+  const tagMap = {
+    hippo: { markers: hippoMarkers, polyline: hippoPolyline },
+    penguin: { markers: penguinMarkers, polyline: penguinPolyline },
+    spongebob: { markers: spongebobMarkers, polyline: spongebobPolyline },
+    patrick: { markers: patrickMarkers, polyline: patrickPolyline },
+    smileys: { markers: smileysMarkers, polyline: smileysPolyline }
+  };
 
-    if (show) {
-      markers.forEach(m => m.addTo(map));
-      polyline.addTo(map);
-    } else {
-      markers.forEach(m => map.removeLayer(m));
-      map.removeLayer(polyline);
-    }
+  const group = tagMap[tag];
+  if (!group) return;
+
+  if (show) {
+    group.markers.forEach(m => m.addTo(map));
+    if (group.polyline) group.polyline.addTo(map);
+  } else {
+    group.markers.forEach(m => map.removeLayer(m));
+    if (group.polyline) map.removeLayer(group.polyline);
   }
+}
+
 
   fetch("https://sheetdb.io/api/v1/fyyvku4q2tqb0")
     .then(res => res.json())
     .then(async data => {
       const valid = data.filter(entry => entry.location && entry.location.includes(','));
-      const hippoData = valid.filter(e => e.tagId === "ZA-004");
-      const penguinData = valid.filter(e => e.tagId === "ZA-005");
+      const spongebobData = valid.filter(e => e.tagId === "ZA-001");
+const patrickData = valid.filter(e => e.tagId === "ZA-002");
+const smileysData = valid.filter(e => e.tagId === "ZA-003");
+const hippoData = valid.filter(e => e.tagId === "ZA-004");
+const penguinData = valid.filter(e => e.tagId === "ZA-005");
 
-      const recent = [...hippoData, ...penguinData].slice(-10).reverse();
+const recent = [...spongebobData, ...patrickData, ...smileysData, ...hippoData, ...penguinData]
+  .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+  .slice(0, 10);
+
       const firstDate = new Date(valid[0]?.timestamp);
       const today = new Date();
       const totalDays = Math.ceil((today - firstDate) / (1000 * 60 * 60 * 24));
@@ -259,8 +274,52 @@ let spongebobPolyline, patrickPolyline, smileysPolyline;
         totalDistance += distance;
         previous = { lat, lon };
 
-        const tagEmoji = entry.tagId === "ZA-004" ? "🦛" : "🐧";
-        const icon = entry.tagId === "ZA-004" ? hippoIcon : penguinIcon;
+        let tagEmoji = "❓";
+let icon = null;
+let markerArray = null;
+let pathArray = null;
+
+if (entry.tagId === "ZA-001") {
+  tagEmoji = "🧽";
+  icon = spongebobIcon;
+  markerArray = spongebobMarkers;
+  pathArray = spongebobPath;
+} else if (entry.tagId === "ZA-002") {
+  tagEmoji = "🌸";
+  icon = patrickIcon;
+  markerArray = patrickMarkers;
+  pathArray = patrickPath;
+} else if (entry.tagId === "ZA-003") {
+  tagEmoji = "😀";
+  icon = smileysIcon;
+  markerArray = smileysMarkers;
+  pathArray = smileysPath;
+} else if (entry.tagId === "ZA-004") {
+  tagEmoji = "🦛";
+  icon = hippoIcon;
+  markerArray = hippoMarkers;
+  pathArray = hippoPath;
+} else if (entry.tagId === "ZA-005") {
+  tagEmoji = "🐧";
+  icon = penguinIcon;
+  markerArray = penguinMarkers;
+  pathArray = penguinPath;
+} else {
+  return; // skip unknown tags
+}
+
+const marker = L.marker([lat, lon], { icon }).bindPopup(`
+  <strong>${entry.name || "Anonymous"}</strong><br>
+  🕒 ${entry.timestamp}<br>
+  ${tagEmoji} ${geo.town}<br>
+  ${geo.countryCode ? `<img src="https://flagsapi.com/${geo.countryCode}/flat/32.png">` : ""}
+  ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
+`);
+marker.addTo(map);
+markerArray.push(marker);
+pathArray.push([lat, lon]);
+
+
         const marker = L.marker([lat, lon], { icon }).bindPopup(`
           <strong>${entry.name || "Anonymous"}</strong><br>
           🕒 ${entry.timestamp}<br>
@@ -269,13 +328,6 @@ let spongebobPolyline, patrickPolyline, smileysPolyline;
           ${entry.photo && entry.photo.startsWith("http") ? `<br><a href="${entry.photo}" target="_blank">📸 View Photo</a>` : ""}
         `);
 
-        if (entry.tagId === "ZA-004") {
-          hippoMarkers.push(marker);
-          hippoPath.push([lat, lon]);
-        } else if (entry.tagId === "ZA-005") {
-          penguinMarkers.push(marker);
-          penguinPath.push([lat, lon]);
-        }
 
         list.innerHTML += `
           <div class="checkin">
@@ -371,7 +423,7 @@ let spongebobPolyline, patrickPolyline, smileysPolyline;
 </script>
   
 <div style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #888; z-index: 1003;">
-  TagRace Map v1.16 — 2025-09-23
+  TagRace Map v1.17 — 2025-09-23
 </div>
 
 </body>
